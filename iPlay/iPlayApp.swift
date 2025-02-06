@@ -11,7 +11,13 @@ import SwiftUI
 struct iPlayApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            #if os(iOS)
+            ContentViewiPhone()
+            #endif
+            
+            #if os(macOS)
+            ContentViewMac()
+            #endif
         }
     }
 }
