@@ -11,7 +11,6 @@ import MultipeerConnectivity
 struct Player: Hashable, Identifiable {
     //TODO: Add More Attributes: Avatar, ...
     var id: MCPeerID
-    var id1: MCPeerID
     
     static func ==(a: Player, b: Player) -> Bool {
         a.id == b.id
