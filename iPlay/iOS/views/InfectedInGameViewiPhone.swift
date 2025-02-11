@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct InGameViewiPhone: View {
+struct InfectedInGameViewiPhone: View {
     @State var isInfected = false
     var body: some View {
         VStack {
@@ -22,5 +22,5 @@ struct InGameViewiPhone: View {
 }
 
 #Preview {
-    InGameViewiPhone()
+    InfectedInGameViewiPhone()
 }

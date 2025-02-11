@@ -40,7 +40,7 @@ struct ContentViewiPhone: View {
                 
             case .inGame:
                 //TODO: Add views for in Game
-                InGameViewiPhone()
+                InfectedInGameViewiPhone()
             }
         } else {
             VStack {
