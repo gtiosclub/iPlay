@@ -34,6 +34,7 @@ struct ContentViewMac: View {
         } else {
             VStack {
                 TextField("Username", text: $username)
+                    .padding()
                 Button("Open Lobby") {
                     MCHostManager.createSharedInstance(name: username)
                     mcManager = MCHostManager.shared
