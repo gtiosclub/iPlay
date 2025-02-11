@@ -36,7 +36,8 @@ struct ContentViewiPhone: View {
                     }
                 }
             case .inLobby:
-                Text("Welcome to the lobby")
+//                Text("Welcome to the lobby")
+                TestSendView()
                 
             case .inGame:
                 //TODO: Add views for in Game
@@ -45,6 +46,17 @@ struct ContentViewiPhone: View {
         } else {
             VStack {
                 TextField("Username", text: $username)
+                    .padding()
+                    .textFieldStyle(.roundedBorder)
+                    #if os(iOS)
+                    .autocapitalization(.none)
+                    .disableAutocorrection(true)
+                    #endif
+                    /*
+                     This is needed since we are using a multiplatform app
+                     so we need to check if os is iOS for disabling contextual
+                     autocapitalization and autocorrect modifiers (QOL)
+                    */
                 Button("Look For Lobbies") {
                     MCPlayerManager.createSharedInstance(name: username)
                     mcManager = MCPlayerManager.shared
