@@ -51,6 +51,8 @@ class MCPlayerManager: NSObject {
         browser.startBrowsingForPeers()
         print("Looking for lobbies")
     }
+    
+    
 }
 
 extension MCPlayerManager: MCSessionDelegate {
@@ -100,4 +102,31 @@ extension MCPlayerManager: MCNearbyServiceBrowserDelegate {
             openLobbies.remove(Lobby(id: peerID))
         }
     }
+}
+
+
+extension MCPlayerManager {
+    
+    //Send vector data by using JSON encoding of a Vector class
+    func sendVector(x: Double, y: Double) {
+        guard let session = session else {
+            print("Session is nil")
+            return
+        }
+        
+        let vector = Vector(x:x, y:y)
+        
+        if let vector_data = try? JSONEncoder().encode(vector) {
+            do {
+                try session.send(vector_data, toPeers: session.connectedPeers, with: .reliable)
+            } catch {
+                print("Error sending data: \(error)")
+            }
+        }
+    }
+    
+    // Add other Multipeer Connectivity send functions here:
+    
+    
+    
 }

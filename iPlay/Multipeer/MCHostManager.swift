@@ -66,6 +66,12 @@ extension MCHostManager: MCSessionDelegate {
     
     func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
         //TODO: Fill in for recieving data
+        do {
+            let vector_data = try JSONDecoder().decode(Vector.self, from: data)
+            print("Received vector: \(vector_data)")
+        } catch {
+            print("Error decoding vector: \(error)")
+        }
     }
     
     func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {
