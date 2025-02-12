@@ -10,7 +10,8 @@ import SwiftUI
 struct JoystickOverlay: View {
     @State private var movementVector: (CGFloat, CGFloat) = (0, 0)
     private var maxJoystickOffset: CGFloat = 60
-    
+    @State var timer: Timer?
+    private var timerInterval = 0.5
     var body: some View {
         ZStack {
             Circle()
@@ -24,10 +25,9 @@ struct JoystickOverlay: View {
                 
         }
         .onAppear {
-            // Uncomment to send (print) movement vector every 0.5 sec
-//            Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true, block: { _ in
-//                sendMovementVector()
-//            })
+            timer = Timer.scheduledTimer(withTimeInterval: timerInterval, repeats: true, block: { _ in
+                sendMovementVector()
+            })
         }
     }
     
@@ -43,6 +43,7 @@ struct JoystickOverlay: View {
                 } else {
                     movementVector = (value.translation.width, value.translation.height)
                 }
+                
                
             }
             .onEnded { _ in
@@ -52,6 +53,10 @@ struct JoystickOverlay: View {
     func sendMovementVector() {
         let x = movementVector.0/60
         let y = movementVector.1/60
+        if x == 0 && y == 0 {
+            return
+        }
+        MCPlayerManager.shared?.sendVector(x: x, y: y)
         print("x: \(x), y: \(y)")
     }
 }

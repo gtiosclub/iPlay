@@ -36,11 +36,11 @@ struct ContentViewiPhone: View {
                     }
                 }
             case .inLobby:
-//                Text("Welcome to the lobby")
-                TestSendView()
+                //InfectedInGameViewiPhone()
                 
             case .inGame:
                 //TODO: Add views for in Game
+                // For infected
                 InfectedInGameViewiPhone()
             }
         } else {
