@@ -25,6 +25,9 @@ class MCPlayerManager: NSObject {
     
     var viewState = ViewState.preLobby
     
+    // word to be recieved from host
+    @Published var receivedWord: String?
+    
     private init(name: String) {
         let peerID = MCPeerID(displayName: name)
         currentPlayer = Player(id: peerID)
@@ -71,6 +74,16 @@ extension MCPlayerManager: MCSessionDelegate {
     
     func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
         //TODO: Fill in for recieving data
+        // decode the data coming in
+        if let receivedText = String(data: data, encoding: .utf8) {
+            
+            // store on main thread
+            DispatchQueue.main.async {
+                self.receivedWord = receivedText
+            }
+        } else {
+            print("Error: Received invalid prompter word")
+        }
     }
     
     func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {
