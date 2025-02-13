@@ -51,6 +51,21 @@ class MCPlayerManager: NSObject {
         browser.startBrowsingForPeers()
         print("Looking for lobbies")
     }
+    
+    /*
+     Sends the prompt to host, which then sends to other players
+     */
+    func sendPrompt(_ prompt: String) {
+        do {
+            if let data = prompt.data(using: .utf8), let host = host {
+                try session?.send(data, toPeers: [host], with: .reliable)
+                print("SENT: \(prompt)")
+            }
+        } catch {
+            print("Failed to send data: \(error.localizedDescription)")
+        }
+    }
+    
 }
 
 extension MCPlayerManager: MCSessionDelegate {
