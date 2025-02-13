@@ -14,20 +14,16 @@ struct ContentViewMac: View {
         if let mcManager {
             switch mcManager.viewState {
             case .inLobby:
-                VStack {
-                    Text("\(username)'s Lobby")
-                    List {
-                        ForEach(Array(mcManager.gameParticipants)) { player in
-                            Section {
-                                Text(player.id.displayName)
-                            }
-                        }
-                    }
-                }
+                LobbyView(mcManager: mcManager, username: username)
                 
             case .inGame:
                 //TODO: Fill in game selection and start of game
-                Color.black
+                switch mcManager.gameState {
+                    case .Infected:
+                        Infected()
+                    case .Spectrum:
+                        Text("Spectrum")
+                }
             default:
                 Color.blue
             }
@@ -39,6 +35,7 @@ struct ContentViewMac: View {
                     mcManager = MCHostManager.shared
                     if let mcManager {
                         mcManager.viewState = .inLobby
+                        mcManager.gameState = .Infected
                         mcManager.start()
                     } else {
                         print("MC Manager not initialized")
