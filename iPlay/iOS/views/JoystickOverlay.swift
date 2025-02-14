@@ -11,7 +11,7 @@ struct JoystickOverlay: View {
     @State private var movementVector: (CGFloat, CGFloat) = (0, 0)
     private var maxJoystickOffset: CGFloat = 60
     @State var timer: Timer?
-    private var timerInterval = 0.5
+    private var timerInterval = 0.1
     var body: some View {
         ZStack {
             Circle()
@@ -56,7 +56,7 @@ struct JoystickOverlay: View {
         if x == 0 && y == 0 {
             return
         }
-        MCPlayerManager.shared?.sendVector(x: x, y: y)
+        MCPlayerManager.shared?.sendVector(v: Vector(x: x, y: y))
         print("x: \(x), y: \(y)")
     }
 }

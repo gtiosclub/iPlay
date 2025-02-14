@@ -36,7 +36,8 @@ struct ContentViewiPhone: View {
                     }
                 }
             case .inLobby:
-                //InfectedInGameViewiPhone()
+//                InfectedInGameViewiPhone()
+                Text("In Lobby")
                 
             case .inGame:
                 //TODO: Add views for in Game

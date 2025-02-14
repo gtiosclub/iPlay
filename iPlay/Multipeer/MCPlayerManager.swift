@@ -108,21 +108,22 @@ extension MCPlayerManager: MCNearbyServiceBrowserDelegate {
 extension MCPlayerManager {
     
     //Send vector data by using JSON encoding of a Vector class
-    func sendVector(x: Double, y: Double) {
+    func sendVector(v: Vector) {
         guard let session = session else {
             print("Session is nil")
             return
         }
         
-        let vector = Vector(x:x, y:y)
-        
-        if let vector_data = try? JSONEncoder().encode(vector) {
-            do {
-                try session.send(vector_data, toPeers: session.connectedPeers, with: .reliable)
-            } catch {
-                print("Error sending data: \(error)")
-            }
+        var mcData = MCData(id: "infectedVector")
+        do {
+            try mcData.encodeData(id: mcData.id, data: v)
+            let data = try JSONEncoder().encode(mcData)
+            try session.send(data, toPeers: session.connectedPeers, with: .reliable)
+        } catch {
+            print(error)
+            return
         }
+        
     }
     
     // Add other Multipeer Connectivity send functions here:

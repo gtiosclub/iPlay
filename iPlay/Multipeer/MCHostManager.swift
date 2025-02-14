@@ -67,8 +67,15 @@ extension MCHostManager: MCSessionDelegate {
     func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
         //TODO: Fill in for recieving data
         do {
-            let vector_data = try JSONDecoder().decode(Vector.self, from: data)
-            print("Received vector: \(vector_data)")
+            var mcData = try JSONDecoder().decode(MCData.self, from: data)
+            switch mcData.id{
+            case "infectedVector":
+                let vector_data = try mcData.decodeData(id: mcData.id, as: Vector.self)
+                print("Received vector: \(vector_data)")
+            default:
+                print("Unhandled ID: \(mcData.id)")
+            }
+            
         } catch {
             print("Error decoding vector: \(error)")
         }
