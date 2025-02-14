@@ -9,13 +9,15 @@ import Foundation
 import MultipeerConnectivity
 
 
-
+enum GameState {
+    case Infected, Spectrum
+}
 
 /*
  MC Host Manager is the class containing the attributes and functions dictating the multipeer connectivity on the side of the Mac/Host
  */
 @Observable
-class MCHostManager: NSObject {
+class MCHostManager: NSObject, ObservableObject {
     static var shared: MCHostManager?
     
     let serviceType = "iPlay"
@@ -26,8 +28,9 @@ class MCHostManager: NSObject {
     var gameParticipants = Set<Player>()
     
     var viewState: ViewState = .preLobby
+    var gameState: GameState = .Infected
     
-    private init(name: String) {
+    init(name: String) {
         let peerID = MCPeerID(displayName: name)
         
         advertiser = MCNearbyServiceAdvertiser(peer: peerID, discoveryInfo: nil, serviceType: serviceType)
