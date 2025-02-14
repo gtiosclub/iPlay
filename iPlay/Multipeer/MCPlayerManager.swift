@@ -26,7 +26,8 @@ class MCPlayerManager: NSObject {
     var viewState = ViewState.preLobby
     
     // word to be recieved from host
-    @Published var receivedWord: String?
+    var receivedWord: String?
+    
     
     private init(name: String) {
         let peerID = MCPeerID(displayName: name)
