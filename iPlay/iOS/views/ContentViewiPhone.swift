@@ -41,6 +41,12 @@ struct ContentViewiPhone: View {
             case .inGame:
                 //TODO: Add views for in Game
                 Color.red
+                
+            case .inSettings:
+                Color.green
+                
+            case .inAbout:
+                Color.yellow
             }
         } else {
             VStack {
