@@ -21,6 +21,7 @@ struct LobbyView: View {
                     }
                 }
             }
+
             Text("Select Game:")
             Button("Infected") {
                 mcManager.gameState = .Infected
