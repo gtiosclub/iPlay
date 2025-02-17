@@ -61,6 +61,21 @@ class MCHostManager: NSObject, ObservableObject {
         advertiser.startAdvertisingPeer()
         print("Advertising and Looking for peers")
     }
+    
+    /*
+     Sends the prompt to the other players
+     */
+    func sendPrompt(_ prompt: String, _ sender: MCPeerID) {
+        do {
+            if let data = prompt.data(using: .utf8){
+                let recipients = session?.connectedPeers.filter { $0 != sender } ?? []
+                try session?.send(data, toPeers: recipients, with: .reliable)
+                print("SENT: \(prompt)")
+            }
+        } catch {
+            print("Failed to send data: \(error.localizedDescription)")
+        }
+    }
 }
 
 extension MCHostManager: MCSessionDelegate {
@@ -69,7 +84,12 @@ extension MCHostManager: MCSessionDelegate {
     }
     
     func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
-        //TODO: Fill in for recieving data
+        if let receivedString = String(data: data, encoding: .utf8) {
+            print("Received: \(receivedString) from \(peerID)")
+            sendPrompt(receivedString, peerID)
+        } else {
+            print("Error: Received invalid prompter word")
+        }
     }
     
     func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {
