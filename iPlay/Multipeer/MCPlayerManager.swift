@@ -55,21 +55,6 @@ class MCPlayerManager: NSObject {
         browser.startBrowsingForPeers()
         print("Looking for lobbies")
     }
-    
-    /*
-     Sends the prompt to host, which then sends to other players
-     */
-    func sendPrompt(_ prompt: String) {
-        do {
-            if let data = prompt.data(using: .utf8), let host = host {
-                try session?.send(data, toPeers: [host], with: .reliable)
-                print("SENT: \(prompt)")
-            }
-        } catch {
-            print("Failed to send data: \(error.localizedDescription)")
-        }
-    }
-    
 }
 
 extension MCPlayerManager: MCSessionDelegate {
@@ -129,4 +114,51 @@ extension MCPlayerManager: MCNearbyServiceBrowserDelegate {
             openLobbies.remove(Lobby(id: peerID))
         }
     }
+}
+
+
+extension MCPlayerManager {
+    
+    //Send vector data by using JSON encoding of a Vector class
+    func sendVector(v: Vector) {
+        guard let session else {
+            print("Session is nil")
+            return
+        }
+        
+        var mcData = MCData(id: "infectedVector")
+        do {
+            try mcData.encodeData(id: mcData.id, data: v)
+            let data = try JSONEncoder().encode(mcData)
+            try session.send(data, toPeers: session.connectedPeers, with: .reliable)
+        } catch {
+            print(error)
+            return
+        }
+        
+    }
+    
+    //Sends the prompt to host, which then sends to other players
+    func sendPrompt(_ prompt: String) {
+        guard let session else {
+            print("Session is nil")
+            return
+        }
+        
+        guard let host else {
+            print("No host in session")
+            return
+        }
+            
+        var mcData = MCData(id: "spectrumPromptFromPrompter")
+        do {
+            try mcData.encodeData(id: "spectrumPromptFromPrompter", data: MCDataString(message: prompt))
+            let data = try JSONEncoder().encode(mcData)
+            try session.send(data, toPeers: [host], with: .reliable)
+        } catch {
+            print("Failed to send data: \(error.localizedDescription)")
+        }
+    }
+    
+    // Add other Multipeer Connectivity send functions here:
 }

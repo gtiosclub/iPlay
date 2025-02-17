@@ -84,11 +84,25 @@ extension MCHostManager: MCSessionDelegate {
     }
     
     func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
-        if let receivedString = String(data: data, encoding: .utf8) {
-            print("Received: \(receivedString) from \(peerID)")
-            sendPrompt(receivedString, peerID)
-        } else {
-            print("Error: Received invalid prompter word")
+
+        //TODO: Fill in for recieving data
+        do {
+            var mcData = try JSONDecoder().decode(MCData.self, from: data)
+            switch mcData.id {
+            case "infectedVector":
+                let vector_data = try mcData.decodeData(id: mcData.id, as: Vector.self)
+                print("Received vector: \(vector_data)")
+            case "spectrumPromptFromPrompter":
+                let prompt = try mcData.decodeData(id: mcData.id, as: MCDataString.self)
+                print("Prompt: \(prompt.message)")
+                
+
+            default:
+                print("Unhandled ID: \(mcData.id)")
+            }
+            
+        } catch {
+            print("Error decoding: \(error)")
         }
     }
     
