@@ -37,7 +37,9 @@ struct ContentViewiPhone: View {
                 }
             case .inLobby:
 //                InfectedInGameViewiPhone()
-                Text("In Lobby")
+                Button("Send String") {
+                    mcManager.sendPrompt("Hello")
+                }
                 
             case .inGame:
                 //TODO: Add views for in Game

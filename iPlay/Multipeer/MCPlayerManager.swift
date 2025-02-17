@@ -74,17 +74,22 @@ extension MCPlayerManager: MCSessionDelegate {
     }
     
     func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
-        //TODO: Fill in for recieving data
-        // decode the data coming in
-        if let receivedText = String(data: data, encoding: .utf8) {
-            
-            // store on main thread
-            DispatchQueue.main.async {
-                self.receivedWord = receivedText
+        do {
+            var mcData = try JSONDecoder().decode(MCData.self, from: data)
+            switch mcData.id {
+            case "spectrumPromptFromPrompter":
+                let prompt = try mcData.decodeData(id: mcData.id, as: MCDataString.self)
+                print("Recieved prompt!! \(prompt.message)")
+                
+                //Add Additional Cases Here:
+            default:
+                print("Unhandled ID: \(mcData.id)")
             }
-        } else {
-            print("Error: Received invalid prompter word")
+            
+        } catch {
+            print("Error decoding: \(error)")
         }
+        
     }
     
     func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {
@@ -135,7 +140,6 @@ extension MCPlayerManager {
             print(error)
             return
         }
-        
     }
     
     //Sends the prompt to host, which then sends to other players
