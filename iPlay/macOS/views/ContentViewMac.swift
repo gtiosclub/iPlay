@@ -20,7 +20,7 @@ struct ContentViewMac: View {
                 //TODO: Fill in game selection and start of game
                 switch mcManager.gameState {
                     case .Infected:
-                        Infected()
+                    Infected(mcManager: mcManager)
                     case .Spectrum:
                         Text("Spectrum")
                 }
