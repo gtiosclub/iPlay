@@ -13,6 +13,12 @@ struct MCData: Codable {
     
     mutating func encodeData(id: String, data: Any) throws {
         switch id {
+        case "gameStateManagement":
+            let encodedData = try? JSONEncoder().encode(data as? GameState)
+            guard let encodedData = encodedData else {
+                throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
+            }
+            self.data = encodedData
         case "infectedVector":
             let encodedData = try? JSONEncoder().encode(data as? Vector)
             guard let encodedData = encodedData else {
@@ -35,6 +41,12 @@ struct MCData: Codable {
             throw MCDataError.invalidData(message: "Cannot decode, there is no data")
         }
         switch id {
+        case "gameStateManagement":
+            let decodedData = try JSONDecoder().decode(GameState.self, from: data)
+            guard decodedData is T else {
+                throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
+            }
+            return decodedData as! T
         case "infectedVector":
             let decodedData = try JSONDecoder().decode(Vector.self, from: data)
             guard decodedData is T else {

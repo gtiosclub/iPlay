@@ -23,7 +23,8 @@ class MCPlayerManager: NSObject {
     var host: MCPeerID?
     var openLobbies = Set<Lobby>()
     
-    var viewState = ViewState.preLobby
+    var viewState: ViewState = .preLobby
+    var gameState: GameState = .Infected
     
     // word to be recieved from host
     var receivedWord: String?
@@ -80,7 +81,11 @@ extension MCPlayerManager: MCSessionDelegate {
             case "spectrumPromptFromPrompter":
                 let prompt = try mcData.decodeData(id: mcData.id, as: MCDataString.self)
                 print("Recieved prompt!! \(prompt.message)")
-                
+            case "gameStateManagement":
+                let newGameState = try mcData.decodeData(id: mcData.id, as: GameState.self)
+                gameState = newGameState
+                viewState = .inGame
+                print("recieved game state: ", gameState)
                 //Add Additional Cases Here:
             default:
                 print("Unhandled ID: \(mcData.id)")
