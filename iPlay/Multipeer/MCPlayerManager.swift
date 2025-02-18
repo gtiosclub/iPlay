@@ -25,6 +25,10 @@ class MCPlayerManager: NSObject {
     
     var viewState = ViewState.preLobby
     
+    // word to be recieved from host
+    var receivedWord: String?
+    
+    
     private init(name: String) {
         let peerID = MCPeerID(displayName: name)
         currentPlayer = Player(id: peerID)
@@ -70,7 +74,22 @@ extension MCPlayerManager: MCSessionDelegate {
     }
     
     func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
-        //TODO: Fill in for recieving data
+        do {
+            var mcData = try JSONDecoder().decode(MCData.self, from: data)
+            switch mcData.id {
+            case "spectrumPromptFromPrompter":
+                let prompt = try mcData.decodeData(id: mcData.id, as: MCDataString.self)
+                print("Recieved prompt!! \(prompt.message)")
+                
+                //Add Additional Cases Here:
+            default:
+                print("Unhandled ID: \(mcData.id)")
+            }
+            
+        } catch {
+            print("Error decoding: \(error)")
+        }
+        
     }
     
     func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {
@@ -100,4 +119,50 @@ extension MCPlayerManager: MCNearbyServiceBrowserDelegate {
             openLobbies.remove(Lobby(id: peerID))
         }
     }
+}
+
+
+extension MCPlayerManager {
+    
+    //Send vector data by using JSON encoding of a Vector class
+    func sendVector(v: Vector) {
+        guard let session else {
+            print("Session is nil")
+            return
+        }
+        
+        var mcData = MCData(id: "infectedVector")
+        do {
+            try mcData.encodeData(id: mcData.id, data: v)
+            let data = try JSONEncoder().encode(mcData)
+            try session.send(data, toPeers: session.connectedPeers, with: .reliable)
+        } catch {
+            print(error)
+            return
+        }
+    }
+    
+    //Sends the prompt to host, which then sends to other players
+    func sendPrompt(_ prompt: String) {
+        guard let session else {
+            print("Session is nil")
+            return
+        }
+        
+        guard let host else {
+            print("No host in session")
+            return
+        }
+            
+        var mcData = MCData(id: "spectrumPromptFromPrompter")
+        do {
+            try mcData.encodeData(id: "spectrumPromptFromPrompter", data: MCDataString(message: prompt))
+            let data = try JSONEncoder().encode(mcData)
+            try session.send(data, toPeers: [host], with: .reliable)
+        } catch {
+            print("Failed to send data: \(error.localizedDescription)")
+        }
+    }
+    
+    // Add other Multipeer Connectivity send functions here:
 }
