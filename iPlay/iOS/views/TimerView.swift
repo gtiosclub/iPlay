@@ -37,25 +37,26 @@ struct ScoreTracking: View {
         }
         .padding(.horizontal)
         .padding(.vertical, 6)
-        .background(Color.gray.opacity(0.4))
+//        .background(Color.gray.opacity(0.4))
     }
 }
 
 struct TimerView: View {
-    @Binding var playerPoints: Int
-    @State private var secondsElapsed: Int = 0
-    let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    @State private var secondsElapsed: Double = 0.0
+    let timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
         
     var body: some View {
-        Text("Time Alive: \(secondsElapsed)s")
+        Text("Time: \(String(format: "%.1f", 60 - secondsElapsed))s")
             .font(.headline)
+            .bold()
             .padding()
             .background(Color.gray.opacity(0.5))
             .cornerRadius(8)
             .foregroundColor(.white)
             .onReceive(timer) { _ in
-                secondsElapsed += 1
-                playerPoints += 1
+                if secondsElapsed <= 60{
+                    secondsElapsed += 0.1
+                }
             }
     }
 }
@@ -78,7 +79,7 @@ struct ContentView: View {
         var body: some View {
             VStack {
                 Spacer()
-                TimerView(playerPoints: $players[0].points)
+                TimerView()
                     .padding(.bottom, 10)
                 ScoreTracking(players: players)
                     .padding(.bottom, 20)
