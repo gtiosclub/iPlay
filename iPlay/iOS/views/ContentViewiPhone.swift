@@ -43,8 +43,12 @@ struct ContentViewiPhone: View {
                 
             case .inGame:
                 //TODO: Add views for in Game
-                // For infected
-                InfectedInGameViewiPhone()
+                switch mcManager.gameState {
+                    case .Infected:
+                    InfectedInGameViewiPhone()
+                    case .Spectrum:
+                        Text("Spectrum")
+                }
             }
         } else {
             VStack {

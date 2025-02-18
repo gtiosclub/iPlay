@@ -9,10 +9,10 @@ import Foundation
 import MultipeerConnectivity
 
 
-enum ViewState {
+enum ViewState: Codable{
     case preLobby, inLobby, inGame
 }
-enum GameState {
+enum GameState: Codable{
     case Infected, Spectrum
 }
 
@@ -115,6 +115,7 @@ extension MCHostManager: MCNearbyServiceAdvertiserDelegate {
 
 extension MCHostManager {
     
+    //SPECTRUM
     //Sends the prompt to the other players
     func sendPrompt(_ promptData: Data, _ sender: MCPeerID) {
         guard let session else {
@@ -130,5 +131,22 @@ extension MCHostManager {
         }
     }
     
-    // Add other Multipeer Connectivity send functions here:
+    //GAME STATE MANAGEMENT
+    func sendGameState(_ gameStateData: GameState) {
+        guard let session else {
+            print("Could not send game state, no session active")
+            return
+        }
+        
+        do {
+            var mcData = MCData(id:"gameStateManagement")
+            try mcData.encodeData(id: "gameStateManagement", data: gameState)
+            let data = try JSONEncoder().encode(mcData)
+            
+            try session.send(data, toPeers: session.connectedPeers, with: .reliable)
+        } catch {
+            print("Failed to send data: \(error.localizedDescription)")
+        }
+    }
+    //Add other Multipeer Connectivity send functions here:
 }

@@ -32,6 +32,7 @@ struct LobbyView: View {
             
             Button("Start Game: \(mcManager.gameState)") {
                 mcManager.viewState = .inGame
+                mcManager.sendGameState(mcManager.gameState)
             }
             .padding(.vertical, 40)
         }
