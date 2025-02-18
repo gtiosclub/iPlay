@@ -27,7 +27,8 @@ class MCHostManager: NSObject, ObservableObject {
     var advertiser: MCNearbyServiceAdvertiser
     var session: MCSession?
     var peer: MCPeerID
-    
+    var infectedPlayers: [MCPeerID: Bool] = [:]
+
     var gameParticipants = Set<Player>()
     
     var viewState: ViewState = .preLobby
@@ -131,4 +132,38 @@ extension MCHostManager {
     }
     
     // Add other Multipeer Connectivity send functions here:
+    
+    func setPlayerInfected(_ player: MCPeerID) {
+        if (infectedPlayers[player] != true) {
+            infectedPlayers[player] = true
+            print("\(player.displayName) is now infected!")
+        }
+    }
+    
+    func sendDataToInfectedPlayers(_ data: Data) {
+        guard let session else {
+            print("Could not send data, no session active")
+            return
+        }
+        
+        let infectedPeers = infectedPlayers.filter { (peerID, isInfected) in
+            isInfected == true
+        }.map { (peerID, _) in
+            peerID
+        }
+
+
+        if infectedPeers.isEmpty {
+            print("No infected players to send data to")
+            return
+        }
+
+        do {
+            try session.send(data, toPeers: infectedPeers, with: .reliable)
+            print("Sent data to infected players: \(infectedPeers.map { $0.displayName })")
+        } catch {
+            print("Failed to send data: \(error.localizedDescription)")
+        }
+    }
+
 }
