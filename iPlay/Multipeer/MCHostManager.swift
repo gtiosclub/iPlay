@@ -116,6 +116,24 @@ extension MCHostManager: MCNearbyServiceAdvertiserDelegate {
 extension MCHostManager {
     
     //SPECTRUM
+    //Sets the scale categories and generates a random number to send to the host
+    func sendScale(_ prompter: MCPeerID) -> Int? {
+        guard let session else {
+            return nil
+        }
+        /*
+        scaleBody.categories = ["Bad Good", "Cold Hot", "Weak Strong"].randomElement()
+        do {
+            let recipients = session.connectedPeers.filter { $0 != prompter }
+            try session.send(scaleBody, toPeers: recipients, with: .reliable)
+        } catch {
+            print("Failed to send scale: \(error.localizedDescription)")
+        }
+        */
+        return Int.random(in: 0...10)
+    }
+    
+    //SPECTRUM
     //Sends the prompt to the other players
     func sendPrompt(_ promptData: Data, _ sender: MCPeerID) {
         guard let session else {
