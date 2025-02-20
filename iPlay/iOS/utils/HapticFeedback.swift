@@ -5,11 +5,10 @@
 //  Created by Jason Nair on 2/18/25.
 //
 
-import SwiftUI
-import UIKit  
+#if os(iOS)
+import UIKit
 
 struct HapticFeedback {
-    
     static func trigger(_ type: HapticType) {
         let generator: UIFeedbackGenerator
         
@@ -44,4 +43,4 @@ struct HapticFeedback {
     }
 }
 
-
+#endif
