@@ -9,7 +9,7 @@ import Foundation
 import SpriteKit
 import MultipeerConnectivity
 
-struct InfectedPlayer: Hashable {
+struct InfectedPlayer {
     var id: MCPeerID = MCPeerID(displayName: "default")
     var name: String = "name"
     var isInfected: Bool = false
