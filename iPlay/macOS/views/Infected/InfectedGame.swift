@@ -17,10 +17,10 @@ class InfectedGame: SKScene {
     }
     
     func generateObstacles() {
-        let obstacle = SKShapeNode(rectOf: CGSize(width: 50, height: 100))
-        obstacle.position = CGPoint(x: 100, y: 100)
-        obstacle.fillColor = .green
-        addChild(obstacle)
+//        let obstacle = SKShapeNode(rectOf: CGSize(width: 50, height: 100))
+//        obstacle.position = CGPoint(x: 100, y: 100)
+//        obstacle.fillColor = .green
+//        addChild(obstacle)
     }
 }
 

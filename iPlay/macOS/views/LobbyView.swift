@@ -21,6 +21,7 @@ struct LobbyView: View {
                     }
                 }
             }
+
             Text("Select Game:")
             Button("Infected") {
                 mcManager.gameState = .Infected
@@ -31,6 +32,7 @@ struct LobbyView: View {
             
             Button("Start Game: \(mcManager.gameState)") {
                 mcManager.viewState = .inGame
+                mcManager.sendGameState(mcManager.gameState)
             }
             .padding(.vertical, 40)
         }

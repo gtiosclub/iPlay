@@ -9,6 +9,7 @@ import SwiftUI
 import SpriteKit
 
 struct Infected: View {
+    @ObservedObject var mcManager: MCHostManager
     
     var scene : SKScene {
         let scene = InfectedGame()
@@ -18,10 +19,17 @@ struct Infected: View {
     }
     
     var body: some View {
-        SpriteView(scene: scene)
+        ZStack {
+            SpriteView(scene: scene)
+            VStack(alignment: .center) {
+                TimerView()
+                Spacer()
+                ScoreTracking(players: Array(mcManager.gameParticipants))
+            }
+        }
     }
 }
 
 #Preview {
-    Infected()
+    Infected(mcManager: MCHostManager(name: "TEST"))
 }

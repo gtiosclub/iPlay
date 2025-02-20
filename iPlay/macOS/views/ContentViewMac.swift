@@ -20,7 +20,7 @@ struct ContentViewMac: View {
                 //TODO: Fill in game selection and start of game
                 switch mcManager.gameState {
                     case .Infected:
-                        Infected()
+                    Infected(mcManager: mcManager)
                     case .Spectrum:
                         Text("Spectrum")
                 }
@@ -41,8 +41,9 @@ struct ContentViewMac: View {
                 Text("iPlay")
                     .font(.title)
                 TextField("Username", text: $username)
-                
-                Button("Start Lobby") {
+                    .padding()
+                Button("Open Lobby") {
+
                     MCHostManager.createSharedInstance(name: username)
                     mcManager = MCHostManager.shared
                     if let mcManager {
