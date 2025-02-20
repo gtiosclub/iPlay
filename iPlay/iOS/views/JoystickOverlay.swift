@@ -21,7 +21,7 @@ struct JoystickOverlay: View {
                 .foregroundStyle(.black.opacity(0.7))
                 .frame(width: 80, height: 80)
                 .offset(x: movementVector.0, y: movementVector.1)
-                .gesture(joystickDragGestore)
+                .gesture(joystickDragGesture)
                 
         }
         .onAppear {
@@ -31,7 +31,7 @@ struct JoystickOverlay: View {
         }
     }
     
-    var joystickDragGestore: some Gesture {
+    var joystickDragGesture: some Gesture {
         DragGesture()
             .onChanged { value in
                 let center = CGPoint(x: 0, y: 0)
@@ -51,8 +51,8 @@ struct JoystickOverlay: View {
             }
     }
     func sendMovementVector() {
-        let x = movementVector.0/60
-        let y = movementVector.1/60
+        let x = movementVector.0/maxJoystickOffset
+        let y = movementVector.1/maxJoystickOffset
         if x == 0 && y == 0 {
             return
         }
