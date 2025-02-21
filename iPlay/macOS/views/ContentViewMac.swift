@@ -14,29 +14,31 @@ struct ContentViewMac: View {
         if let mcManager {
             switch mcManager.viewState {
             case .inLobby:
-                LobbyView(mcManager: mcManager, username: username)
+                VStack {
+                    Text("\(username)'s Lobby")
+                    List {
+                        ForEach(Array(mcManager.gameParticipants)) { player in
+                            Section {
+                                Text(player.id.displayName)
+                            }
+                        }
+                    }
+                }
                 
             case .inGame:
                 //TODO: Fill in game selection and start of game
-                switch mcManager.gameState {
-                    case .Infected:
-                    Infected(mcManager: mcManager)
-                    case .Spectrum:
-                        Text("Spectrum")
-                }
+                Color.black
             default:
                 Color.blue
             }
         } else {
             VStack {
                 TextField("Username", text: $username)
-                    .padding()
                 Button("Open Lobby") {
                     MCHostManager.createSharedInstance(name: username)
                     mcManager = MCHostManager.shared
                     if let mcManager {
                         mcManager.viewState = .inLobby
-                        mcManager.gameState = .Infected
                         mcManager.start()
                     } else {
                         print("MC Manager not initialized")
