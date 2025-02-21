@@ -9,18 +9,15 @@ import Foundation
 import MultipeerConnectivity
 
 
-enum ViewState: Codable{
+enum ViewState {
     case preLobby, inLobby, inGame
-}
-enum GameState: Codable{
-    case Infected, Spectrum
 }
 
 /*
  MC Host Manager is the class containing the attributes and functions dictating the multipeer connectivity on the side of the Mac/Host
  */
 @Observable
-class MCHostManager: NSObject, ObservableObject {
+class MCHostManager: NSObject {
     static var shared: MCHostManager?
     
     let serviceType = "iPlay"
@@ -31,9 +28,8 @@ class MCHostManager: NSObject, ObservableObject {
     var gameParticipants = Set<Player>()
     
     var viewState: ViewState = .preLobby
-    var gameState: GameState = .Infected
     
-    init(name: String) {
+    private init(name: String) {
         let peerID = MCPeerID(displayName: name)
         
         advertiser = MCNearbyServiceAdvertiser(peer: peerID, discoveryInfo: nil, serviceType: serviceType)
@@ -61,7 +57,6 @@ class MCHostManager: NSObject, ObservableObject {
         advertiser.startAdvertisingPeer()
         print("Advertising and Looking for peers")
     }
-    
 }
 
 extension MCHostManager: MCSessionDelegate {
@@ -70,24 +65,7 @@ extension MCHostManager: MCSessionDelegate {
     }
     
     func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
-        do {
-            var mcData = try JSONDecoder().decode(MCData.self, from: data)
-            switch mcData.id {
-            case "infectedVector":
-                let vector_data = try mcData.decodeData(id: mcData.id, as: Vector.self)
-                print("Received vector: \(vector_data)")
-            case "spectrumPromptFromPrompter":
-                let prompt = try mcData.decodeData(id: mcData.id, as: MCDataString.self)
-                sendPrompt(data, peerID)
-                
-            //Add Additional Cases Here:
-            default:
-                print("Unhandled ID: \(mcData.id)")
-            }
-            
-        } catch {
-            print("Error decoding: \(error)")
-        }
+        //TODO: Fill in for recieving data
     }
     
     func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {
@@ -110,43 +88,4 @@ extension MCHostManager: MCNearbyServiceAdvertiserDelegate {
         gameParticipants.insert(Player(id: peerID))
         invitationHandler(true, session)
     }
-}
-
-
-extension MCHostManager {
-    
-    //SPECTRUM
-    //Sends the prompt to the other players
-    func sendPrompt(_ promptData: Data, _ sender: MCPeerID) {
-        guard let session else {
-            print("Could not send prompt, no session active")
-            return
-        }
-        
-        do {
-            let recipients = session.connectedPeers.filter { $0 != sender }
-            try session.send(promptData, toPeers: recipients, with: .reliable)
-        } catch {
-            print("Failed to send data: \(error.localizedDescription)")
-        }
-    }
-    
-    //GAME STATE MANAGEMENT
-    func sendGameState(_ gameStateData: GameState) {
-        guard let session else {
-            print("Could not send game state, no session active")
-            return
-        }
-        
-        do {
-            var mcData = MCData(id:"gameStateManagement")
-            try mcData.encodeData(id: "gameStateManagement", data: gameState)
-            let data = try JSONEncoder().encode(mcData)
-            
-            try session.send(data, toPeers: session.connectedPeers, with: .reliable)
-        } catch {
-            print("Failed to send data: \(error.localizedDescription)")
-        }
-    }
-    //Add other Multipeer Connectivity send functions here:
 }
