@@ -44,6 +44,9 @@ struct LobbyView: View {
         for player in mcManager.gameParticipants {
             mcManager.infectedPlayers.append(InfectedPlayer(id: player.id, name: player.id.displayName, isInfected: false))
         }
+        let randomIndex = Int.random(in: 0..<mcManager.infectedPlayers.count)
+        mcManager.infectedPlayers[randomIndex].isInfected = true
+        
     }
 }
 
