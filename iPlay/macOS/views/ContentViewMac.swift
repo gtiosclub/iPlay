@@ -10,6 +10,8 @@ import SwiftUI
 struct ContentViewMac: View {
     @State private var username = ""
     @State private var mcManager: MCHostManager?
+    @State private var currentView: ViewState = .preLobby
+    
     var body: some View {
         if let mcManager {
             switch mcManager.viewState {
@@ -24,55 +26,53 @@ struct ContentViewMac: View {
                     case .Spectrum:
                         Text("Spectrum")
                 }
-                
-            case .inSettings:
-                Text("Settings coming soon")
-                Color.black
-                
-            case .inAbout:
-                Text("About coming soon")
-                Color.black
+
         
             default:
                 Color.blue
             }
         } else {
-            VStack {
-                Text("iPlay")
-                    .font(.title)
-                TextField("Username", text: $username)
-                    .padding()
-                Button("Open Lobby") {
+            switch currentView {
+            case .preLobby:
+                VStack {
+                    Text("iPlay")
+                        .font(.title)
+                    TextField("Username", text: $username)
+                        .padding()
+                    Button("Open Lobby") {
 
-                    MCHostManager.createSharedInstance(name: username)
-                    mcManager = MCHostManager.shared
-                    if let mcManager {
-                        mcManager.viewState = .inLobby
-                        mcManager.gameState = .Infected
-                        mcManager.start()
-                    } else {
-                        print("MC Manager not initialized")
+                        MCHostManager.createSharedInstance(name: username)
+                        mcManager = MCHostManager.shared
+                        if let mcManager {
+                            mcManager.viewState = .inLobby
+                            mcManager.gameState = .Infected
+                            mcManager.start()
+                        } else {
+                            print("MC Manager not initialized")
+                        }
+                    }
+                    
+                    Button("Settings") {
+                        currentView = .inSettings
+                    }
+                    
+                    Button("About") {
+                        currentView = .inAbout
                     }
                 }
+            case .inSettings:
+                SettingView()
                 
-                Button("Settings") {
-                    if let mcManager {
-                        mcManager.viewState = .inSettings
-                        mcManager.start()
-                    } else {
-                        print("MC Manager not initialized")
-                    }
-                }
+            case .inAbout:
+                AboutView()
                 
-                Button("About") {
-                    if let mcManager {
-                        mcManager.viewState = .inAbout
-                        mcManager.start()
-                    } else {
-                        print("MC Manager not initialized")
-                    }
-                }
+            default:
+                Text("uh oh")
+                Color.red
             }
+            
+
+            
         }
     }
 }

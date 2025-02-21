@@ -10,9 +10,7 @@ import MultipeerConnectivity
 
 
 
-enum ViewState: Codable{
-    case preLobby, inLobby, inGame
-}
+
 enum GameState: Codable{
     case Infected, Spectrum
 }

@@ -50,6 +50,9 @@ struct ContentViewiPhone: View {
                     case .Spectrum:
                         Text("Spectrum")
                 }
+                
+            default:
+                Color.white
             }
         } else {
             VStack {
