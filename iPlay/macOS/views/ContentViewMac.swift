@@ -61,10 +61,10 @@ struct ContentViewMac: View {
                     }
                 }
             case .inSettings:
-                SettingView()
+                SettingView(currentView: $currentView)
                 
             case .inAbout:
-                AboutView()
+                AboutView(currentView: $currentView)
                 
             default:
                 Text("uh oh")

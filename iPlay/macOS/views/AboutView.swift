@@ -10,14 +10,18 @@
 import SwiftUI
 
 struct AboutView: View {
+    @Binding var currentView: ViewState
     
     var body: some View {
         VStack {
             Text("hi this is the about page").padding()
+            Button("Back") {
+                currentView = .preLobby
+            }
         }
     }
 }
-
-#Preview {
-    AboutView()
-}
+//
+//#Preview {
+//    AboutView()
+//}
