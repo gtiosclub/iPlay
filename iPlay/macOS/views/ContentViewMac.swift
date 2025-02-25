@@ -21,6 +21,8 @@ struct ContentViewMac: View {
                 switch mcManager.gameState {
                     case .Infected:
                     Infected(mcManager: mcManager)
+                    
+                    
                     case .Spectrum:
                         Text("Spectrum")
                 }
