@@ -31,11 +31,14 @@ struct LobbyView: View {
             }
             
             Button("Start Game: \(mcManager.gameState)") {
-                if mcManager.gameState == .Infected {
-                    createInfectedPlayers()
+                if mcManager.gameParticipants.count >= 1 {
+        
+                    if mcManager.gameState == .Infected {
+                        createInfectedPlayers()
+                    }
+                    mcManager.viewState = .inGame
+                    mcManager.sendGameState(mcManager.gameState)
                 }
-                mcManager.viewState = .inGame
-                mcManager.sendGameState(mcManager.gameState)
             }
             .padding(.vertical, 40)
         }
