@@ -9,7 +9,7 @@ import SpriteKit
 
 class InfectedGame: SKScene {
     override func didMove(to: SKView) {
-        self.backgroundColor = .blue
+        self.backgroundColor = .gray
         generateObstacles()
         generatePlayerNodes()
         physicsBody = SKPhysicsBody(edgeLoopFrom: frame)
@@ -28,14 +28,63 @@ class InfectedGame: SKScene {
         }
     }
     
-    func generateObstacles() {
-//        let obstacle = SKShapeNode(rectOf: CGSize(width: 50, height: 100))
-//        obstacle.position = CGPoint(x: 100, y: 100)
-//        obstacle.fillColor = .green
-//        addChild(obstacle)
+    enum ShapeType: CaseIterable {
+        case circle, rectangle
     }
+    
+    func generateObstacles() {
+        let numberOfObstacles = Int.random(in: 4...7)
+        
+        for _ in 0..<numberOfObstacles {
+            let shape = ShapeType.allCases.randomElement()!
+            var position: CGPoint
+            
+            //Random Shape Selection
+            let obstacle: SKShapeNode
+            switch shape {
+            case .circle: obstacle = SKShapeNode(circleOfRadius: CGFloat.random(in: 40...100))
+            case .rectangle: obstacle = SKShapeNode(rectOf: CGSize(width: CGFloat.random(in: 70...200), height: CGFloat.random(in: 70...200)))
+                //T0-DO: generate obstacles of more shapes, polygons using CGMutablePath
+            }
+            //Select future position for obstacle
+            repeat {
+                position = CGPoint(
+                    x: CGFloat.random(in: 50...(frame.width - 50)),
+                    y: CGFloat.random(in: 50...(frame.height - 50))
+                )
+            } while isTooClose(position)
+            obstacle.position = position
+            //Color and Outline
+            obstacle.fillColor = SKColor(red: CGFloat.random(in: 0...1), green: CGFloat.random(in: 0...1), blue: CGFloat.random(in: 0...1), alpha: 1.0)
+            obstacle.strokeColor = .black
+            //Rotation
+            obstacle.zRotation += .pi * CGFloat.random(in: 0..<2)
+            //Physics Collision
+            obstacle.physicsBody = SKPhysicsBody(edgeLoopFrom: obstacle.path!)
+            obstacle.physicsBody?.affectedByGravity = false
+            obstacle.physicsBody?.allowsRotation = false
+            obstacle.physicsBody?.collisionBitMask = 0x1
+            addChild(obstacle)
+        }
+    }
+    
+    //Check if Obstacle will be spawned too close to obstacles & players
+    func isTooClose(_ position: CGPoint) -> Bool {
+        for obstacle in children {
+            let dx = position.x - obstacle.position.x
+            let dy = position.y - obstacle.position.y
+            let distance = sqrt(dx * dx + dy * dy)
+            
+            if distance < 200 {
+                return true
+            }
+        }
+        return false
+    }
+    
+    
     func generatePlayerNodes() {
-        var spawnPoints: [CGPoint] = generateSpawnPoints(MCHostManager.shared!.infectedPlayers.count)
+        let spawnPoints: [CGPoint] = generateSpawnPoints(MCHostManager.shared!.infectedPlayers.count)
 
         for i in MCHostManager.shared!.infectedPlayers.indices {
             let player = MCHostManager.shared!.infectedPlayers[i]
@@ -67,7 +116,7 @@ class InfectedGame: SKScene {
         let xMidPoint = w / 2
         let yMidPoint = h / 2
         
-        for i in 0..<(numPlayers - 1) {
+        for i in 0...(numPlayers - 1) {
             var spawnPoint: CGPoint
             switch i {
             case 0: spawnPoint = CGPoint(x: CGFloat.random(in: cornerMargin...(xMidPoint - xMargin)), y: h - yMargin)
