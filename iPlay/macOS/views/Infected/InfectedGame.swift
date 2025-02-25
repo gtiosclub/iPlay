@@ -12,7 +12,7 @@ class InfectedGame: SKScene {
         self.backgroundColor = .blue
         generateObstacles()
         generatePlayerNodes()
-        
+        physicsBody = SKPhysicsBody(edgeLoopFrom: frame)
         
     }
     override func update(_ currentTime: TimeInterval) {
@@ -43,6 +43,12 @@ class InfectedGame: SKScene {
             name.fontSize = 12
             name.position = CGPoint(x: 0, y: 16)
             player.playerObject.addChild(name)
+            //Physics bodies set up for collision
+            //TO-DO: update the physics body shapes once we get the sprites implemented to
+            player.playerObject.physicsBody = SKPhysicsBody(circleOfRadius: 10)
+            player.playerObject.physicsBody?.affectedByGravity = false
+            player.playerObject.physicsBody?.allowsRotation = false
+            player.playerObject.physicsBody?.collisionBitMask = 0x1
             addChild(player.playerObject)
             
         }
