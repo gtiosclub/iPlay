@@ -29,14 +29,14 @@ class InfectedGame: SKScene {
     }
     
     enum ShapeType: CaseIterable {
-        case circle, rectangle
+        case circle, rectangle, polygon
     }
     
     func generateObstacles() {
         let numberOfObstacles = Int.random(in: 4...7)
         
         for _ in 0..<numberOfObstacles {
-            let shape = ShapeType.allCases.randomElement()!
+            let shape = ShapeType.allCases.randomElement()! // Gets random shape from ShapeType
             var position: CGPoint
             
             //Random Shape Selection
@@ -45,6 +45,7 @@ class InfectedGame: SKScene {
             case .circle: obstacle = SKShapeNode(circleOfRadius: CGFloat.random(in: 40...100))
             case .rectangle: obstacle = SKShapeNode(rectOf: CGSize(width: CGFloat.random(in: 70...200), height: CGFloat.random(in: 70...200)))
                 //T0-DO: generate obstacles of more shapes, polygons using CGMutablePath
+            case .polygon: obstacle = SKShapeNode(path: polygonPath(sides: Int.random(in: 5...8), x: CGFloat.random(in: 50...(frame.width - 50)), y: CGFloat.random(in: 50...(frame.height - 50)), radius: CGFloat.random(in: 40...100), offset: 0))
             }
             //Select future position for obstacle
             repeat {
@@ -66,6 +67,54 @@ class InfectedGame: SKScene {
             obstacle.physicsBody?.collisionBitMask = 0x1
             addChild(obstacle)
         }
+    }
+    
+    /**
+     Creates the points of the polygon.
+     - Parameters:
+        - sides: The number of sides of the polygon
+        - x: The x-coordinate of the center of the polygon
+        - y: The y-coordinate of the center of the polygon
+        - radius: The radius of the polygon
+        - offset: Change where a view is drawn
+     - Returns: An array of the points of the polygon.
+     */
+    func polygonPointArray(sides: Int, x: CGFloat, y: CGFloat, radius: CGFloat, offset: CGFloat) -> [CGPoint] {
+        let angle = (360/CGFloat(sides)).radians() // .radians() is a function created in the extension of CGFloat
+        let cx = x // x origin
+        let cy = y // y origin
+        let r = radius
+        var i = 0
+        var points = [CGPoint]()
+        while i <= sides {
+            let xpo = cx + r * cos(angle * CGFloat(i) - offset.radians()) // parametric equation of a circle
+            let ypo = cy + r * sin(angle * CGFloat(i) - offset.radians()) // parametric equation of a circle
+            points.append(CGPoint(x: xpo, y: ypo))
+            i += 1
+        }
+        return points
+    }
+    
+    /**
+     Creates the path of the polygon.
+     - Parameters:
+        - sides: The number of sides of the polygon
+        - x: The x-coordinate of the center of the polygon
+        - y: The y-coordinate of the center of the polygon
+        - radius: The radius of the polygon
+        - offset: Change where a view is drawn
+     - Returns: A path of the polygon.
+     */
+    func polygonPath(sides: Int, x: CGFloat, y: CGFloat, radius: CGFloat, offset: CGFloat) -> CGPath {
+        let path = CGMutablePath.init()
+        let points = polygonPointArray(sides: sides, x: x, y: y, radius: radius, offset: offset)
+        let cpg = points[0]
+        path.move(to: CGPoint(x: cpg.x, y: cpg.y))
+        for point in points {
+            path.addLine(to: CGPoint(x: point.x, y: point.y))
+        }
+        path.closeSubpath()
+        return path
     }
     
     //Check if Obstacle will be spawned too close to obstacles & players
@@ -139,3 +188,12 @@ class InfectedGame: SKScene {
     }
 }
 
+extension CGFloat {
+    
+    /// Converts an angle in degrees to radians.
+    /// - Returns: An angle in radians.
+    func radians() -> CGFloat {
+        let rad = CGFloat(Double.pi) * (self/180)
+        return rad
+    }
+}
