@@ -9,10 +9,11 @@ import Foundation
 import SpriteKit
 import MultipeerConnectivity
 
-struct InfectedPlayer {
+struct InfectedPlayer: Hashable, Identifiable {
     var id: MCPeerID = MCPeerID(displayName: "default")
     var name: String = "name"
     var isInfected: Bool = false
+    var points: Int = 0
     var playerObject: SKNode = SKShapeNode(circleOfRadius: 10)
     let MOVEMULTIPLIER: CGFloat = 10
     

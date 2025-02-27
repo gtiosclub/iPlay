@@ -22,9 +22,9 @@ struct Infected: View {
         ZStack {
             SpriteView(scene: scene)
             VStack(alignment: .center) {
-                TimerView()
+                TimerView(mcManager: mcManager)
                 Spacer()
-                ScoreTracking(players: Array(mcManager.gameParticipants))
+                ScoreTracking(MCManager: mcManager)
             }
         }
     }

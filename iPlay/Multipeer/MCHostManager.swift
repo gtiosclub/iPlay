@@ -30,6 +30,8 @@ class MCHostManager: NSObject, ObservableObject {
     
     var gameParticipants = Set<Player>()
     var infectedPlayers: [InfectedPlayer] = []
+    var secondsElapsed: Double = 0.0
+    var timer: Timer?
     
     var viewState: ViewState = .preLobby
     var gameState: GameState = .Infected
@@ -61,6 +63,37 @@ class MCHostManager: NSObject, ObservableObject {
     func start() {
         advertiser.startAdvertisingPeer()
         print("Advertising and Looking for peers")
+    }
+    
+    func startInfectedGame() {
+        secondsElapsed = 0.0
+        initializeScores()
+        startTimer()
+    }
+    
+    func initializeScores() {
+        for i in infectedPlayers.indices {
+            infectedPlayers[i].points = 0
+        }
+    }
+    
+    func startTimer() {
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            self.secondsElapsed += 1.0
+            
+            for i in self.infectedPlayers.indices where !self.infectedPlayers[i].isInfected {
+                self.infectedPlayers[i].points += 1
+            }
+        }
+    }
+    
+    func infectScore(infectorIndex: Int, infectedIndex: Int) {
+//        let basePoints = Int(ceil(120.0 / Double(infectedPlayers.count - 1)))
+        
+        if !infectedPlayers[infectedIndex].isInfected {
+            infectedPlayers[infectorIndex].points += 20
+            infectedPlayers[infectedIndex].isInfected = true
+        }
     }
     
 }
