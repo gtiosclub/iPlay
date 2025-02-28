@@ -134,7 +134,7 @@ extension MCHostManager {
     }
     
     //GAME STATE MANAGEMENT
-    func sendGameState(_ gameStateData: GameState) {
+    func sendGameState() {
         guard let session else {
             print("Could not send game state, no session active")
             return
@@ -149,6 +149,23 @@ extension MCHostManager {
         } catch {
             print("Failed to send data: \(error.localizedDescription)")
         }
+    }
+    
+    func sendInfectedState(_ state: MCInfectedState) {
+        guard let session else {
+            print("Could not send infected state, no session active")
+            return
+        }
+        do {
+            var mcData = MCData(id:"infectedState")
+            try mcData.encodeData(id: "infectedState", data: state)
+            let data = try JSONEncoder().encode(mcData)
+            
+            try session.send(data, toPeers: session.connectedPeers, with: .reliable)
+        } catch {
+            print("Failed to send data: \(error.localizedDescription)")
+        }
+        
     }
     //Add other Multipeer Connectivity send functions here:
 }

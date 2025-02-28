@@ -177,6 +177,8 @@ class InfectedGame: SKScene {
     func infect(_ player: inout InfectedPlayer) {
         player.isInfected = true
         (player.playerObject as! SKShapeNode).fillColor = player.isInfected ? .red : .green
+        let infectedState: MCInfectedState = MCInfectedState(infected: player.isInfected, playerID: player.id.displayName)
+        MCHostManager.shared!.sendInfectedState(infectedState)
     }
 }
 
