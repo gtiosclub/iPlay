@@ -77,7 +77,7 @@ extension MCHostManager: MCSessionDelegate {
             case "infectedVector":
                 let vector_data = try mcData.decodeData(id: mcData.id, as: Vector.self)
                 infectedPlayers.first(where: {$0.id.displayName == peerID.displayName})?.move(by: vector_data)
-                print("Received vector: \(vector_data)")
+//                print("Received vector: \(vector_data)")
             case "spectrumPromptFromPrompter":
                 let prompt = try mcData.decodeData(id: mcData.id, as: MCDataString.self)
                 sendPrompt(data, peerID)

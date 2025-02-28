@@ -10,17 +10,17 @@ import SpriteKit
 class InfectedGame: SKScene {
     override func didMove(to: SKView) {
         self.backgroundColor = .gray
-        generateObstacles()
         generatePlayerNodes()
+        generateObstacles()
         physicsBody = SKPhysicsBody(edgeLoopFrom: frame)
         
     }
     override func update(_ currentTime: TimeInterval) {
         for player in MCHostManager.shared!.infectedPlayers.filter({$0.isInfected}) {
-            print("checking \(player.name)")
+//            print("checking \(player.name)")
             for i in MCHostManager.shared!.infectedPlayers.indices {
                 if player.playerObject.intersects(MCHostManager.shared!.infectedPlayers[i].playerObject) && player.name != MCHostManager.shared!.infectedPlayers[i].name {
-                    print("detected collision")
+//                    print("detected collision")
                     infect(&MCHostManager.shared!.infectedPlayers[i])
                 }
             }
@@ -45,7 +45,7 @@ class InfectedGame: SKScene {
             case .circle: obstacle = SKShapeNode(circleOfRadius: CGFloat.random(in: 40...100))
             case .rectangle: obstacle = SKShapeNode(rectOf: CGSize(width: CGFloat.random(in: 70...200), height: CGFloat.random(in: 70...200)))
                 //T0-DO: generate obstacles of more shapes, polygons using CGMutablePath
-            case .polygon: obstacle = SKShapeNode(path: polygonPath(sides: Int.random(in: 5...8), x: CGFloat.random(in: 50...(frame.width - 50)), y: CGFloat.random(in: 50...(frame.height - 50)), radius: CGFloat.random(in: 40...100), offset: 0))
+            case .polygon: obstacle = SKShapeNode(path: polygonPath(sides: Int.random(in: 5...8), x: CGFloat.random(in: 50...(frame.width - 50)), y: CGFloat.random(in: 50...(frame.height - 50)), offset: 0))
             }
             //Select future position for obstacle
             repeat {
@@ -58,6 +58,7 @@ class InfectedGame: SKScene {
             //Color and Outline
             obstacle.fillColor = SKColor(red: CGFloat.random(in: 0...1), green: CGFloat.random(in: 0...1), blue: CGFloat.random(in: 0...1), alpha: 1.0)
             obstacle.strokeColor = .black
+            obstacle.lineWidth = 5
             //Rotation
             obstacle.zRotation += .pi * CGFloat.random(in: 0..<2)
             //Physics Collision
@@ -79,14 +80,14 @@ class InfectedGame: SKScene {
         - offset: Change where a view is drawn
      - Returns: An array of the points of the polygon.
      */
-    func polygonPointArray(sides: Int, x: CGFloat, y: CGFloat, radius: CGFloat, offset: CGFloat) -> [CGPoint] {
+    func polygonPointArray(sides: Int, x: CGFloat, y: CGFloat, offset: CGFloat) -> [CGPoint] {
         let angle = (360/CGFloat(sides)).radians() // .radians() is a function created in the extension of CGFloat
         let cx = x // x origin
         let cy = y // y origin
-        let r = radius
         var i = 0
         var points = [CGPoint]()
         while i <= sides {
+            let r = CGFloat.random(in: 40...100)
             let xpo = cx + r * cos(angle * CGFloat(i) - offset.radians()) // parametric equation of a circle
             let ypo = cy + r * sin(angle * CGFloat(i) - offset.radians()) // parametric equation of a circle
             points.append(CGPoint(x: xpo, y: ypo))
@@ -95,19 +96,10 @@ class InfectedGame: SKScene {
         return points
     }
     
-    /**
-     Creates the path of the polygon.
-     - Parameters:
-        - sides: The number of sides of the polygon
-        - x: The x-coordinate of the center of the polygon
-        - y: The y-coordinate of the center of the polygon
-        - radius: The radius of the polygon
-        - offset: Change where a view is drawn
-     - Returns: A path of the polygon.
-     */
-    func polygonPath(sides: Int, x: CGFloat, y: CGFloat, radius: CGFloat, offset: CGFloat) -> CGPath {
+    //Creates path for a polygon
+    func polygonPath(sides: Int, x: CGFloat, y: CGFloat, offset: CGFloat) -> CGPath {
         let path = CGMutablePath.init()
-        let points = polygonPointArray(sides: sides, x: x, y: y, radius: radius, offset: offset)
+        let points = polygonPointArray(sides: sides, x: x, y: y, offset: offset)
         let cpg = points[0]
         path.move(to: CGPoint(x: cpg.x, y: cpg.y))
         for point in points {
@@ -124,7 +116,7 @@ class InfectedGame: SKScene {
             let dy = position.y - obstacle.position.y
             let distance = sqrt(dx * dx + dy * dy)
             
-            if distance < 200 {
+            if distance < 300 {
                 return true
             }
         }
