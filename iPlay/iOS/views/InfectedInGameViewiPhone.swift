@@ -8,13 +8,9 @@
 import SwiftUI
 
 struct InfectedInGameViewiPhone: View {
-    @State var isInfected = false
     var body: some View {
         VStack {
-            
-            Spacer()
-            
-            Text("You are \(isInfected ? "" : "not") infected")
+            Text("You are \(MCPlayerManager.shared!.currentInfectedStatus ? "" : "not") infected")
                 .bold()
                 .padding(.bottom, 80)
                 .font(.system(size: 30))
@@ -26,7 +22,7 @@ struct InfectedInGameViewiPhone: View {
                 
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(isInfected ? Color.red : Color.green)
+        .background(MCPlayerManager.shared!.currentInfectedStatus ? Color.red : Color.green)
     }
 }
 
