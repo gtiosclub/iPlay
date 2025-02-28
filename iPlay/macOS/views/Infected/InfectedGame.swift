@@ -30,6 +30,10 @@ class InfectedGame: SKScene {
                 }
             }
         }
+        
+        if MCManager.secondsElapsed >= 60 || (MCManager.numInfected == MCManager.infectedPlayers.count - 1) {
+            MCManager.endInfectedGame()
+        }
     }
     
     enum ShapeType: CaseIterable {
@@ -143,7 +147,13 @@ class InfectedGame: SKScene {
         if !mcManager.infectedPlayers[infectedIndex].isInfected {
             mcManager.infectScore(infectorIndex: infectorIndex, infectedIndex: infectedIndex)
             (mcManager.infectedPlayers[infectedIndex].playerObject as! SKShapeNode).fillColor = .red
+            mcManager.numInfected += 1  // Increment the count of infected players
+            if mcManager.numInfected == mcManager.infectedPlayers.count - 1 {
+                mcManager.endInfectedGame()
+            }
+            
         }
+        
     }
 
 }
