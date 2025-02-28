@@ -48,7 +48,7 @@ struct JoystickOverlay: View {
                 .scaledToFit()
                 .frame(width: 80, height: 80)
                 .offset(x: movementVector.0 + 1, y: movementVector.1 + 1)
-                .gesture(joystickDragGestore)
+                .gesture(joystickDragGesture)
                 
         }
         .onAppear {

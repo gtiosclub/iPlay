@@ -14,11 +14,8 @@ struct InfectedInGameViewiPhone: View {
                 .bold()
                 .padding(.bottom, 80)
                 .font(.system(size: 30))
-                
-            
+                            
             JoystickOverlay()
-            
-            Spacer()
                 
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
