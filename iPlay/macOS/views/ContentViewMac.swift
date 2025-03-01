@@ -22,6 +22,7 @@ struct ContentViewMac: View {
                     case .Infected:
                     Infected(mcManager: mcManager)
                     case .Spectrum:
+                        
                         Text("Spectrum")
                 }
             default:

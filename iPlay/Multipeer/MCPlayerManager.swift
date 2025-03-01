@@ -26,6 +26,14 @@ class MCPlayerManager: NSObject {
     var viewState: ViewState = .preLobby
     var gameState: GameState = .Infected
     
+    var spectrumPhoneState: SpectrumPhoneState = .instructions
+
+    enum SpectrumPhoneState: Codable{
+        case instructions, youGivingPrompt, waitingForPrompter, waitForGuessers, youAreGuessing, revealingGuesses, pointsAwarded
+    }
+    
+    var isPrompter: Bool = false //might need to refactor
+    
     // word to be recieved from host
     var receivedWord: String?
     
@@ -86,6 +94,39 @@ extension MCPlayerManager: MCSessionDelegate {
                 gameState = newGameState
                 viewState = .inGame
                 print("recieved game state: ", gameState)
+                
+            case "spectrumGameState":
+                let spectrumGameState = try mcData.decodeData(id: mcData.id, as: SpectrumGameState.self)
+                //change view state based on stuff
+                switch spectrumGameState {
+                case .whosPrompting:
+                    if isPrompter {
+                        spectrumPhoneState = .youGivingPrompt
+                        //view should go to you are prompter screen then go to writing prompt after 3? seconds
+                    }
+                    else {
+                        spectrumPhoneState = .waitingForPrompter
+                    }
+                case .hintSubmitted:
+                    if isPrompter {
+                        spectrumPhoneState = .waitForGuessers
+                        //view should go to you are prompter screen then go to writing prompt after 3? seconds
+                    }
+                    else {
+                        spectrumPhoneState = .youAreGuessing
+                    }
+                case .revealingGuesses:
+                    spectrumPhoneState = .revealingGuesses
+                case .pointsAwarded:
+                    spectrumPhoneState = .pointsAwarded
+                default:
+                    spectrumPhoneState = .instructions
+                    print("Game state not handled: \(spectrumGameState)")
+                        
+                }
+                print("recieved spectrum state: ", spectrumGameState)
+                
+                
                 //Add Additional Cases Here:
             default:
                 print("Unhandled ID: \(mcData.id)")
