@@ -45,7 +45,6 @@ class MCHostManager: NSObject, ObservableObject {
         
         session?.delegate = self
         advertiser.delegate = self
-
     }
     
     /*
