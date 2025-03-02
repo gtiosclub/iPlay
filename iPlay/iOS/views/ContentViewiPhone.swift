@@ -47,7 +47,12 @@ struct ContentViewiPhone: View {
                     case .Infected:
                     InfectedInGameViewiPhone()
                     case .Spectrum:
-                        Text("Spectrum")
+                        switch mcManager.spectrumPhoneState {
+                        case .whosPrompting:
+                            //etc...
+                        
+                    }
+                    Text("Spectrum")
                 }
             }
         } else {

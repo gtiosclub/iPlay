@@ -16,6 +16,10 @@ enum GameState: Codable{
     case Infected, Spectrum
 }
 
+enum SpectrumGameState: Codable{
+    case instructions, whosPrompting, hintSubmitted, revealingGuesses, pointsAwarded
+}
+
 /*
  MC Host Manager is the class containing the attributes and functions dictating the multipeer connectivity on the side of the Mac/Host
  */
@@ -33,6 +37,8 @@ class MCHostManager: NSObject, ObservableObject {
     
     var viewState: ViewState = .preLobby
     var gameState: GameState = .Infected
+    
+    var spectrumGameState: SpectrumGameState = .instructions
     
     init(name: String) {
         let peerID = MCPeerID(displayName: name)
@@ -142,6 +148,24 @@ extension MCHostManager {
         do {
             var mcData = MCData(id:"gameStateManagement")
             try mcData.encodeData(id: "gameStateManagement", data: gameState)
+            let data = try JSONEncoder().encode(mcData)
+            
+            try session.send(data, toPeers: session.connectedPeers, with: .reliable)
+        } catch {
+            print("Failed to send data: \(error.localizedDescription)")
+        }
+    }
+    
+    //GAME STATE MANAGEMENT
+    func sendSpectrumState(_ soectrumStateData: SpectrumGameState) {
+        guard let session else {
+            print("Could not send game state, no session active")
+            return
+        }
+        
+        do {
+            var mcData = MCData(id:"spectrumGameState")
+            try mcData.encodeData(id: "spectrumGameState", data: spectrumGameState)
             let data = try JSONEncoder().encode(mcData)
             
             try session.send(data, toPeers: session.connectedPeers, with: .reliable)

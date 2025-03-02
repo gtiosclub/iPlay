@@ -24,6 +24,7 @@ struct ContentViewMac: View {
                     
                     
                     case .Spectrum:
+                        
                         Text("Spectrum")
                 }
             default:
