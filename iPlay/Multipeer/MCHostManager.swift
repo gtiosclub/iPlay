@@ -119,7 +119,7 @@ extension MCHostManager: MCSessionDelegate {
             case "infectedVector":
                 let vector_data = try mcData.decodeData(id: mcData.id, as: Vector.self)
                 infectedPlayers.first(where: {$0.id.displayName == peerID.displayName})?.move(by: vector_data)
-                print("Received vector: \(vector_data)")
+//                print("Received vector: \(vector_data)")
             case "spectrumPromptFromPrompter":
                 let prompt = try mcData.decodeData(id: mcData.id, as: MCDataString.self)
                 sendPrompt(data, peerID)
@@ -176,7 +176,7 @@ extension MCHostManager {
     }
     
     //GAME STATE MANAGEMENT
-    func sendGameState(_ gameStateData: GameState) {
+    func sendGameState() {
         guard let session else {
             print("Could not send game state, no session active")
             return
@@ -191,6 +191,23 @@ extension MCHostManager {
         } catch {
             print("Failed to send data: \(error.localizedDescription)")
         }
+    }
+    
+    func sendInfectedState(_ state: MCInfectedState) {
+        guard let session else {
+            print("Could not send infected state, no session active")
+            return
+        }
+        do {
+            var mcData = MCData(id:"infectedState")
+            try mcData.encodeData(id: "infectedState", data: state)
+            let data = try JSONEncoder().encode(mcData)
+            
+            try session.send(data, toPeers: session.connectedPeers, with: .reliable)
+        } catch {
+            print("Failed to send data: \(error.localizedDescription)")
+        }
+        
     }
     //Add other Multipeer Connectivity send functions here:
 }

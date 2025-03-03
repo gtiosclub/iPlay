@@ -37,7 +37,7 @@ struct LobbyView: View {
                         createInfectedPlayers()
                     }
                     mcManager.viewState = .inGame
-                    mcManager.sendGameState(mcManager.gameState)
+                    mcManager.sendGameState()
                 }
             }
             .padding(.vertical, 40)
@@ -50,6 +50,9 @@ struct LobbyView: View {
         }
         let randomIndex = Int.random(in: 0..<mcManager.infectedPlayers.count)
         mcManager.infectedPlayers[randomIndex].isInfected = true
+        let infectedState = MCInfectedState(infected: true, playerID: mcManager.infectedPlayers[randomIndex].id.displayName)
+        mcManager.sendInfectedState(infectedState)
+        print("sent infected state")
         
     }
 }
