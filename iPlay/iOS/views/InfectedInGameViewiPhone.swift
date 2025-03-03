@@ -12,6 +12,9 @@ struct InfectedInGameViewiPhone: View {
         VStack {
             Text("You are \(MCPlayerManager.shared!.currentInfectedStatus ? "" : "not") infected")
                 .bold()
+                .padding(.bottom, 80)
+                .font(.system(size: 30))
+                            
             JoystickOverlay()
                 
         }
