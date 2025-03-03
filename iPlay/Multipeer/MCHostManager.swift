@@ -28,6 +28,7 @@ class MCHostManager: NSObject, ObservableObject {
     var session: MCSession?
     var peer: MCPeerID
     
+    var numInfected: Int = 0
     var gameParticipants = Set<Player>()
     var infectedPlayers: [InfectedPlayer] = []
     var secondsElapsed: Double = 0.0
@@ -67,6 +68,7 @@ class MCHostManager: NSObject, ObservableObject {
     
     func startInfectedGame() {
         secondsElapsed = 0.0
+        numInfected = 0
         initializeScores()
         startTimer()
     }
@@ -84,7 +86,14 @@ class MCHostManager: NSObject, ObservableObject {
             for i in self.infectedPlayers.indices where !self.infectedPlayers[i].isInfected {
                 self.infectedPlayers[i].points += 1
             }
+            
         }
+    }
+    
+    func endInfectedGame() {
+        timer?.invalidate()
+        timer = nil
+        viewState = .inLobby
     }
     
     func infectScore(infectorIndex: Int, infectedIndex: Int) {

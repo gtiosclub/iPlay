@@ -44,6 +44,7 @@ struct LobbyView: View {
         }
     }
     func createInfectedPlayers() {
+        mcManager.infectedPlayers.removeAll()
         for player in mcManager.gameParticipants {
             mcManager.infectedPlayers.append(InfectedPlayer(id: player.id, name: player.id.displayName, isInfected: false))
         }
