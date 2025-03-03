@@ -31,11 +31,28 @@ struct LobbyView: View {
             }
             
             Button("Start Game: \(mcManager.gameState)") {
-                mcManager.viewState = .inGame
-                mcManager.sendGameState(mcManager.gameState)
+                if mcManager.gameParticipants.count >= 1 {
+        
+                    if mcManager.gameState == .Infected {
+                        createInfectedPlayers()
+                    }
+                    mcManager.viewState = .inGame
+                    mcManager.sendGameState()
+                }
             }
             .padding(.vertical, 40)
         }
+    }
+    func createInfectedPlayers() {
+        for player in mcManager.gameParticipants {
+            mcManager.infectedPlayers.append(InfectedPlayer(id: player.id, name: player.id.displayName, isInfected: false))
+        }
+        let randomIndex = Int.random(in: 0..<mcManager.infectedPlayers.count)
+        mcManager.infectedPlayers[randomIndex].isInfected = true
+        let infectedState = MCInfectedState(infected: true, playerID: mcManager.infectedPlayers[randomIndex].id.displayName)
+        mcManager.sendInfectedState(infectedState)
+        print("sent infected state")
+        
     }
 }
 

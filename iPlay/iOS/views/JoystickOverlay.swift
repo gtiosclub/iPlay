@@ -14,14 +14,41 @@ struct JoystickOverlay: View {
     private var timerInterval = 0.1
     var body: some View {
         ZStack {
-            Circle()
-                .foregroundStyle(.black.opacity(0.3))
+            Image("joystickBase")
+                .resizable()
+                .scaledToFit()
                 .frame(width: 160, height: 160)
-            Circle()
-                .foregroundStyle(.black.opacity(0.7))
+            
+            Image("arrowUp")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 25, height: 25)
+                .offset(y: -60)
+                
+            Image("arrowDown")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 25, height: 25)
+                .offset(y: 55)
+            
+            Image("arrowLeft")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 25, height: 25)
+                .offset(x: -55)
+                
+            Image("arrowRight")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 25, height: 25)
+                .offset(x: 55)
+                
+            Image("joystickTop")
+                .resizable()
+                .scaledToFit()
                 .frame(width: 80, height: 80)
-                .offset(x: movementVector.0, y: movementVector.1)
-                .gesture(joystickDragGestore)
+                .offset(x: movementVector.0 + 1, y: movementVector.1 + 1)
+                .gesture(joystickDragGesture)
                 
         }
         .onAppear {
@@ -31,7 +58,7 @@ struct JoystickOverlay: View {
         }
     }
     
-    var joystickDragGestore: some Gesture {
+    var joystickDragGesture: some Gesture {
         DragGesture()
             .onChanged { value in
                 let center = CGPoint(x: 0, y: 0)
@@ -51,8 +78,8 @@ struct JoystickOverlay: View {
             }
     }
     func sendMovementVector() {
-        let x = movementVector.0/60
-        let y = movementVector.1/60
+        let x = movementVector.0/maxJoystickOffset
+        let y = movementVector.1/maxJoystickOffset
         if x == 0 && y == 0 {
             return
         }
