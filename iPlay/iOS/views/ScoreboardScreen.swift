@@ -33,22 +33,22 @@ struct ScoreboardScreen: View {
                     .background(Color.gray.opacity(0.2))
                 List(sortedPlayers, id: \.id) { player in
                     HStack {
+                        Text("#\(rank(for: player))")
+                            .font(.title2)
+                            .bold()
+                            .padding(.trailing, 10)
                         player.avatar
                             .resizable()
                             .frame(width: 40, height: 40)
                             .clipShape(Circle())
-                        
-                        VStack(alignment: .leading) {
+                    
                             Text(player.username)
                                 .font(.headline)
-                            Text("\(player.points) points")
-                                .font(.subheadline)
-                        }
+
                         Spacer()
-                        
-                        Text("#\(rank(for: player))")
-                            .font(.title2)
-                            .bold()
+                        Text("\(player.points) points")
+                            .font(.headline)
+                
                     }
                     .padding(.vertical, 8)
                 }
