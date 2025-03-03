@@ -16,15 +16,19 @@ class InfectedGame: SKScene {
         
     }
     override func update(_ currentTime: TimeInterval) {
-        for player in MCHostManager.shared!.infectedPlayers.filter({$0.isInfected}) {
-//            print("checking \(player.name)")
-            for i in MCHostManager.shared!.infectedPlayers.indices {
-                if player.playerObject.intersects(MCHostManager.shared!.infectedPlayers[i].playerObject) && player.name != MCHostManager.shared!.infectedPlayers[i].name {
-//                    print("detected collision")
-                    infect(&MCHostManager.shared!.infectedPlayers[i])
+        guard let MCManager = MCHostManager.shared else { return }
+        
+        for infectorIndex in MCManager.infectedPlayers.indices where MCManager.infectedPlayers[infectorIndex].isInfected{
+            let infector = MCManager.infectedPlayers[infectorIndex]
+            
+            for infectedIndex in MCManager.infectedPlayers.indices where infectedIndex != infectorIndex {
+                let infected = MCManager.infectedPlayers[infectedIndex]
+                
+                if infector.playerObject.intersects(infected.playerObject) && infector.name != infected.name {
+                    print("detected collision")
+                    infect(infectedIndex, infectorIndex: infectorIndex)
                 }
             }
-            
         }
     }
     
@@ -174,12 +178,15 @@ class InfectedGame: SKScene {
         return spawnPoints
     }
     
-    func infect(_ player: inout InfectedPlayer) {
-        player.isInfected = true
-        (player.playerObject as! SKShapeNode).fillColor = player.isInfected ? .red : .green
-        let infectedState: MCInfectedState = MCInfectedState(infected: player.isInfected, playerID: player.id.displayName)
-        MCHostManager.shared!.sendInfectedState(infectedState)
+    func infect(_ infectedIndex: Int, infectorIndex: Int) {
+        guard let mcManager = MCHostManager.shared else { return }
+
+        if !mcManager.infectedPlayers[infectedIndex].isInfected {
+            mcManager.infectScore(infectorIndex: infectorIndex, infectedIndex: infectedIndex)
+            (mcManager.infectedPlayers[infectedIndex].playerObject as! SKShapeNode).fillColor = .red
+        }
     }
+
 }
 
 extension CGFloat {
