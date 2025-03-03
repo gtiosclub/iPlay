@@ -19,6 +19,7 @@ struct ContentViewiPhone: View {
                 case .preLobby:
                     VStack {
                         Text("Looking for lobbies...")
+                            .padding(.top, 25)
                         List {
                             ForEach(Array(mcManager.openLobbies)) { lobby in
                                 Section {
@@ -37,6 +38,7 @@ struct ContentViewiPhone: View {
                             }
                         }
                     }
+                    .background(.white)
                 case .inLobby:
                     //                InfectedInGameViewiPhone()
                     Button("Send String") {
@@ -61,13 +63,13 @@ struct ContentViewiPhone: View {
                     .multilineTextAlignment(.center)
                     .padding(.top,-130)
                     
-                    TextField("Username", text: $username)
+                    TextField("Enter Username", text: $username)
                         .padding()
                     
-                        .frame(width:190,height:50)
+                        .frame(width:240,height:60)
                         .multilineTextAlignment(.center)
                         .background(
-                            RoundedRectangle(cornerRadius: 20).fill(Color.clear)
+                            RoundedRectangle(cornerRadius: 30).fill(Color.clear)
                                 .stroke(Color.black, lineWidth: 1)
                         )
 #if os(iOS)
@@ -104,25 +106,24 @@ struct ContentViewiPhone: View {
                         Text("Join game")
                             .font(.title2)
                             .foregroundColor(.white) // Text color
-                            .frame(width: 190, height: 50) // Size of button
+                            .frame(width: 240, height: 60) // Size of button
                             .background( // Button background color
-                                    RoundedRectangle(cornerRadius: 20)
+                                    RoundedRectangle(cornerRadius: 30)
                                         .stroke(Color.black, lineWidth: 1).fill(Color.black)
-
+                                        .opacity((username.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.2 : 1.0))
                             )
-                            
-                        
                     }
+                    .disabled(username.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     
                     Button(action: {
                         isNavigating = true
                     }) {
-                        Text("Avatar")
+                        Text("Customize Avatar")
                             .font(.title2)
                             .foregroundColor(.black) // Text color
-                            .frame(width: 190, height: 50) // Size of button
+                            .frame(width: 240, height: 60) // Size of button
                             .background(
-                                RoundedRectangle(cornerRadius: 20).stroke( Color.black,lineWidth:1).fill(Color.gray)
+                                RoundedRectangle(cornerRadius: 30).stroke( Color.black,lineWidth:1).fill(Color.gray)
                             ) // Button background color
                             
                     }
@@ -135,6 +136,7 @@ struct ContentViewiPhone: View {
                 }
             }
         }
+        .preferredColorScheme(.light)
     }
 }
 
