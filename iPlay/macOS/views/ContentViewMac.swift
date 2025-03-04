@@ -11,7 +11,6 @@ struct ContentViewMac: View {
     @State private var username = ""
     @State private var mcManager: MCHostManager?
     var body: some View {
-        ZStack {
             NavigationStack {
                 if let mcManager {
                     switch mcManager.viewState {
@@ -34,6 +33,8 @@ struct ContentViewMac: View {
                         Color.blue
                     }
                 } else {
+                    ZStack {
+                        Color.white.edgesIgnoringSafeArea(.all)
                     VStack {
                         Image("MacHeader")
                             .resizable()
@@ -71,7 +72,7 @@ struct ContentViewMac: View {
                         .padding(.vertical, 5)
                         
                         NavigationLink {
-                                SettingsView()
+                            SettingsView()
                         } label: {
                             HStack {
                                 Image("settings")
@@ -87,7 +88,7 @@ struct ContentViewMac: View {
                         .padding(.vertical, 5)
                         
                         NavigationLink {
-                                AboutView()
+                            AboutView()
                         } label: {
                             HStack {
                                 Image("about")
@@ -97,16 +98,17 @@ struct ContentViewMac: View {
                                     .padding(.trailing, 20)
                                 Text("about")
                                     .font(.system(size: 32, weight: .ultraLight))
-                                    
+                                
                             }
                         }
                         .buttonStyle(.plain)
                         .padding(.vertical, 5)
                     }
                 }
+
+                }
             }
             .preferredColorScheme(.light)
-        }
         
         
     }
