@@ -10,10 +10,9 @@ import MultipeerConnectivity
 
 
 struct ScoreboardScreen: View {
-    var players: [Player]
     
     var sortedPlayers: [Player] {
-        players.sorted { $0.points > $1.points }
+        MCHostManager.shared?.gameParticipants.sorted { $0.points > $1.points } ?? []
     }
     
     func rank(for players: Player) -> Int {
@@ -53,6 +52,9 @@ struct ScoreboardScreen: View {
                     .padding(.vertical, 8)
                 }
                 .listStyle(PlainListStyle())
+                Button("Return to Lobby") {
+                    MCHostManager.shared?.viewState = .inLobby
+                }
             }
             .frame(maxWidth: .infinity, maxHeight:.infinity)
         }
@@ -77,6 +79,6 @@ struct ScoreboardView_Previews: PreviewProvider {
                              username: "Ronit874",
                              avatar: Image(systemName: "person.fill"),
                              points: 12)
-        ScoreboardScreen(players: [player1, player2, player3, player4])
+        ScoreboardScreen()
     }
 }

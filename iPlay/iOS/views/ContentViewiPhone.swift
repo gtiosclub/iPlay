@@ -53,6 +53,8 @@ struct ContentViewiPhone: View {
                     case .Spectrum:
                         Text("Spectrum")
                     }
+                case .scoreboard:
+                    Text("Check your scoreboard!")
                 }
             } else {
                 

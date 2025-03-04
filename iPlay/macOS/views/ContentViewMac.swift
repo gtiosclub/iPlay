@@ -16,7 +16,8 @@ struct ContentViewMac: View {
                     switch mcManager.viewState {
                     case .inLobby:
                         LobbyView(mcManager: mcManager, username: username)
-                        
+                    case .scoreboard:
+                        ScoreboardScreen()
                     case .inGame:
                         //TODO: Fill in game selection and start of game
                         switch mcManager.gameState {
