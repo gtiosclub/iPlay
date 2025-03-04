@@ -9,12 +9,6 @@ import Foundation
 import MultipeerConnectivity
 
 
-enum ViewState: Codable{
-    case preLobby, inLobby, inGame
-}
-enum GameState: Codable{
-    case Infected, Spectrum
-}
 
 /*
  MC Host Manager is the class containing the attributes and functions dictating the multipeer connectivity on the side of the Mac/Host
