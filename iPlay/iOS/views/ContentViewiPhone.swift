@@ -5,6 +5,8 @@
 //  Created by Danny Byrd on 2/5/25.
 //
 
+#if os(iOS)
+
 import SwiftUI
 import MultipeerConnectivity
 
@@ -38,7 +40,7 @@ struct ContentViewiPhone: View {
             case .inLobby:
 //                InfectedInGameViewiPhone()
                 Button("Send String") {
-                    mcManager.sendPrompt("Hello")
+                    mcManager.sendHint("Hello")
                 }
                 
             case .inGame:
@@ -47,12 +49,26 @@ struct ContentViewiPhone: View {
                     case .Infected:
                     InfectedInGameViewiPhone()
                     case .Spectrum:
-                        switch mcManager.spectrumPhoneState {
-                        case .whosPrompting:
-                            //etc...
-                        
+                    switch mcManager.spectrumPhoneState {
+                    case .instructions:
+                        Color.black
+                    case .youGivingPrompt:
+                        YouAreGivingTheHintView(prompt: mcManager.spectrumPrompt!, playerManager: $mcManager)
+                    case .waitingForPrompter:
+                        YouAreGuessingStartView()
+                    case .waitForGuessers:
+                        if let prompt = mcManager.spectrumPrompt, prompt.isHinter {
+                            HintSubmittedView()
+                        } else {
+                            GuessSubmittedView()
+                        }
+                    case .youAreGuessing:
+                        YouAreGuessingView(hint: mcManager.spectrumHint!, prompt: mcManager.spectrumPrompt!.prompt, playerManager: $mcManager)
+                    case .revealingGuesses:
+                        RevealingGuessesView()
+                    case .pointsAwarded:
+                        Color.black
                     }
-                    Text("Spectrum")
                 }
             }
         } else {
@@ -87,3 +103,5 @@ struct ContentViewiPhone: View {
 #Preview {
     ContentViewiPhone()
 }
+
+#endif

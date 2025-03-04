@@ -1,4 +1,6 @@
+#if os(iOS)
 import SpriteKit
+import UIKit
 
 struct ArrowComponentLogic {
     let center: CGPoint  // Center of the semicircular arc (bottom center of the scene)
@@ -24,6 +26,7 @@ class ArrowComponent: SKScene {
     private let arrow = SKSpriteNode(imageNamed: "arrow")
     private var logic: ArrowComponentLogic!
     private var areTouchesEnabled = true
+    private var guess: CGFloat = 0.0
     
     override init(size: CGSize) {
         super.init(size: size)
@@ -38,6 +41,10 @@ class ArrowComponent: SKScene {
     
     func setAreTouchesEnabled(to touchesEnabled: Bool) {
         self.areTouchesEnabled = touchesEnabled
+    }
+    
+    func getGuess() -> CGFloat {
+        return guess
     }
     
     override func didMove(to view: SKView) {
@@ -81,6 +88,7 @@ class ArrowComponent: SKScene {
         let angle = logic.angle(forValue: value)
         let rotateAction = SKAction.rotate(toAngle: angle, duration: 0.2, shortestUnitArc: true)
         arrow.run(rotateAction)
+        guess = value
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -115,3 +123,5 @@ class ArrowComponent: SKScene {
         updateArrowPosition(for: nearestValue)
     }
 }
+
+#endif

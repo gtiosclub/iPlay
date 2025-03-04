@@ -26,16 +26,15 @@ class MCPlayerManager: NSObject {
     var viewState: ViewState = .preLobby
     var gameState: GameState = .Infected
     
+    
+    //SPECTRUM
     var spectrumPhoneState: SpectrumPhoneState = .instructions
-
-    enum SpectrumPhoneState: Codable{
+    
+    enum SpectrumPhoneState: Codable {
         case instructions, youGivingPrompt, waitingForPrompter, waitForGuessers, youAreGuessing, revealingGuesses, pointsAwarded
     }
-    
-    var isPrompter: Bool = false //might need to refactor
-    
-    // word to be recieved from host
-    var receivedWord: String?
+    var spectrumPrompt: SpectrumPrompt?
+    var spectrumHint: String?
     
     
     private init(name: String) {
@@ -75,6 +74,7 @@ extension MCPlayerManager: MCSessionDelegate {
             print("Connecting")
         case .connected:
             //Player has joined a lobby
+            print("IN GAME??? PeerID: \(peerID.displayName)")
             host = peerID
             viewState = .inLobby
         @unknown default:
@@ -86,35 +86,38 @@ extension MCPlayerManager: MCSessionDelegate {
         do {
             var mcData = try JSONDecoder().decode(MCData.self, from: data)
             switch mcData.id {
-            case "spectrumPromptFromPrompter":
+            case "spectrumHintFromPrompter":
                 let prompt = try mcData.decodeData(id: mcData.id, as: MCDataString.self)
                 print("Recieved prompt!! \(prompt.message)")
+                spectrumHint = prompt.message
+                spectrumPhoneState = .youAreGuessing
+                
             case "gameStateManagement":
                 let newGameState = try mcData.decodeData(id: mcData.id, as: GameState.self)
                 gameState = newGameState
                 viewState = .inGame
                 print("recieved game state: ", gameState)
-                
             case "spectrumGameState":
                 let spectrumGameState = try mcData.decodeData(id: mcData.id, as: SpectrumGameState.self)
+                print("RECIEVED SPECTRUM GAME STATE: \(spectrumGameState)")
                 //change view state based on stuff
                 switch spectrumGameState {
                 case .whosPrompting:
-                    if isPrompter {
+                    if let spectrumPrompt, spectrumPrompt.isHinter {
                         spectrumPhoneState = .youGivingPrompt
                         //view should go to you are prompter screen then go to writing prompt after 3? seconds
                     }
                     else {
                         spectrumPhoneState = .waitingForPrompter
                     }
-                case .hintSubmitted:
-                    if isPrompter {
+                case .guessing:
+                    if let spectrumPrompt, spectrumPrompt.isHinter {
                         spectrumPhoneState = .waitForGuessers
-                        //view should go to you are prompter screen then go to writing prompt after 3? seconds
-                    }
-                    else {
+                    } else {
                         spectrumPhoneState = .youAreGuessing
                     }
+                case .hintSubmitted:
+                    spectrumPhoneState = .waitForGuessers
                 case .revealingGuesses:
                     spectrumPhoneState = .revealingGuesses
                 case .pointsAwarded:
@@ -126,7 +129,10 @@ extension MCPlayerManager: MCSessionDelegate {
                 }
                 print("recieved spectrum state: ", spectrumGameState)
                 
-                
+            case "spectrumPrompt":
+                let prompt = try mcData.decodeData(id: mcData.id, as: SpectrumPrompt.self)
+                print("Decoded initial spectrum prompt: \(prompt.prompt)")
+                self.spectrumPrompt = prompt
                 //Add Additional Cases Here:
             default:
                 print("Unhandled ID: \(mcData.id)")
@@ -169,7 +175,6 @@ extension MCPlayerManager: MCNearbyServiceBrowserDelegate {
 
 
 extension MCPlayerManager {
-    
     //Send vector data by using JSON encoding of a Vector class
     func sendVector(v: Vector) {
         guard let session else {
@@ -188,8 +193,8 @@ extension MCPlayerManager {
         }
     }
     
-    //Sends the prompt to host, which then sends to other players
-    func sendPrompt(_ prompt: String) {
+    //Spectrum: Sends the prompt to host, which then sends to other players
+    func sendHint(_ prompt: String) {
         guard let session else {
             print("Session is nil")
             return
@@ -200,13 +205,35 @@ extension MCPlayerManager {
             return
         }
             
-        var mcData = MCData(id: "spectrumPromptFromPrompter")
+        var mcData = MCData(id: "spectrumHintFromPrompter")
         do {
-            try mcData.encodeData(id: "spectrumPromptFromPrompter", data: MCDataString(message: prompt))
+            try mcData.encodeData(id: "spectrumHintFromPrompter", data: MCDataString(message: prompt))
             let data = try JSONEncoder().encode(mcData)
             try session.send(data, toPeers: [host], with: .reliable)
         } catch {
             print("Failed to send data: \(error.localizedDescription)")
+        }
+    }
+    
+    func submitGuess(guess: CGFloat) {
+        guard let session else {
+            print("Session is nil")
+            return
+        }
+        
+        guard let host else {
+            print("No host in session")
+            return
+        }
+        
+        let guessData = MCDataFloat(num: guess)
+        var mcGuessData = MCData(id: "spectrumGuess")
+        do {
+            try mcGuessData.encodeData(id: "spectrumGuess", data: guessData)
+            let encodedGuess = try JSONEncoder().encode(mcGuessData)
+            try session.send(encodedGuess, toPeers: [host], with: .reliable)
+        } catch {
+            print("Failed to submit guess: \(error.localizedDescription)")
         }
     }
     

@@ -36,8 +36,14 @@ struct LobbyView: View {
                     if mcManager.gameState == .Infected {
                         createInfectedPlayers()
                     }
+                    mcManager.sendGameState(.Spectrum)
+                    
                     mcManager.viewState = .inGame
-                    mcManager.sendGameState(mcManager.gameState)
+                    if mcManager.gameState == .Spectrum {
+                        print("Sending out spectrum data")
+                        mcManager.sendOutInitialSpectrumData()
+                    }
+                    
                 }
             }
             .padding(.vertical, 40)

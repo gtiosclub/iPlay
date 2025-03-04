@@ -25,8 +25,26 @@ struct MCData: Codable {
                 throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
             }
             self.data = encodedData
-        case "spectrumPromptFromPrompter":
+        case "spectrumHintFromPrompter":
             let encodedData = try? JSONEncoder().encode(data as? MCDataString)
+            guard let encodedData = encodedData else {
+                throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
+            }
+            self.data = encodedData
+        case "spectrumPrompt":
+            let encodedData = try? JSONEncoder().encode(data as? SpectrumPrompt)
+            guard let encodedData = encodedData else {
+                throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
+            }
+            self.data = encodedData
+        case "spectrumGameState":
+            let encodedData = try? JSONEncoder().encode(data as? SpectrumGameState)
+            guard let encodedData = encodedData else {
+                throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
+            }
+            self.data = encodedData
+        case "spectrumGuess":
+            let encodedData = try? JSONEncoder().encode(data as? MCDataFloat)
             guard let encodedData = encodedData else {
                 throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
             }
@@ -53,12 +71,30 @@ struct MCData: Codable {
                 throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
             }
             return decodedData as! T
-        case "spectrumPromptFromPrompter":
+        case "spectrumHintFromPrompter":
             let prompt = try JSONDecoder().decode(MCDataString.self, from: data)
             guard prompt is T else {
                 throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
             }
             return prompt as! T
+        case "spectrumPrompt":
+            let prompt = try JSONDecoder().decode(SpectrumPrompt.self, from: data)
+            guard prompt is T else {
+                throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
+            }
+            return prompt as! T
+        case "spectrumGameState":
+            let gameState = try JSONDecoder().decode(SpectrumGameState.self, from: data)
+            guard gameState is T else {
+                throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
+            }
+            return gameState as! T
+        case "spectrumGuess":
+            let guess = try JSONDecoder().decode(MCDataFloat.self, from: data)
+            guard guess is T else {
+                throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
+            }
+            return guess as! T
         default:
             throw MCDataError.invalidID(message: "\(id) is not supported for MCData")
         }
@@ -67,8 +103,4 @@ struct MCData: Codable {
         case invalidID(message: String)
         case invalidData(message: String)
     }
-}
-
-struct MCDataString: Codable {
-    var message: String
 }
