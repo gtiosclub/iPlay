@@ -60,6 +60,7 @@ class MCHostManager: NSObject, ObservableObject {
         print("Advertising and Looking for peers")
     }
     
+    //*********  INFECTED  *********//
     func startInfectedGame() {
         secondsElapsed = 0.0
         numInfected = 0
@@ -85,9 +86,23 @@ class MCHostManager: NSObject, ObservableObject {
     }
     
     func endInfectedGame() {
+        print("ending infected!")
         timer?.invalidate()
         timer = nil
-        viewState = .inLobby
+        //Add game scores to total player scores
+        var updatedPlayers = gameParticipants
+
+        for infectedPlayer in infectedPlayers {
+            if let player = gameParticipants.first(where: { $0.id == infectedPlayer.id }) {
+                var updatedPlayer = player
+                updatedPlayer.points += Int(infectedPlayer.points)
+            
+                updatedPlayers.remove(player)
+                updatedPlayers.insert(updatedPlayer)
+            }
+        }
+        gameParticipants = updatedPlayers
+        viewState = .scoreboard
     }
     
     func infectScore(infectorIndex: Int, infectedIndex: Int) {

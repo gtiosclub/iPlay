@@ -31,7 +31,8 @@ class InfectedGame: SKScene {
             }
         }
         
-        if MCManager.secondsElapsed >= 60 || (MCManager.numInfected == MCManager.infectedPlayers.count - 1) {
+        if MCManager.secondsElapsed >= 60 {
+            print("ENDING INFECTED: time ran out")
             MCManager.endInfectedGame()
         }
     }
@@ -190,6 +191,7 @@ class InfectedGame: SKScene {
             (mcManager.infectedPlayers[infectedIndex].playerObject as! SKShapeNode).fillColor = .red
             mcManager.numInfected += 1  // Increment the count of infected players
             if mcManager.numInfected == mcManager.infectedPlayers.count - 1 {
+                print("ENDING INFECTED: everyone is infected")
                 mcManager.endInfectedGame()
             }
             

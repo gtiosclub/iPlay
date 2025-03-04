@@ -8,5 +8,5 @@
 import Foundation
 
 enum ViewState: Codable{
-    case preLobby, inLobby, inGame
+    case preLobby, inLobby, inGame, scoreboard
 }
