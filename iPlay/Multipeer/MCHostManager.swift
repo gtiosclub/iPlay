@@ -10,6 +10,10 @@ import MultipeerConnectivity
 
 
 
+enum SpectrumGameState: Codable {
+    case instructions, whosPrompting, hintSubmitted, revealingGuesses, pointsAwarded, guessing
+}
+
 /*
  MC Host Manager is the class containing the attributes and functions dictating the multipeer connectivity on the side of the Mac/Host
  */
@@ -31,6 +35,10 @@ class MCHostManager: NSObject, ObservableObject {
     var viewState: ViewState = .preLobby
     var gameState: GameState = .Infected
     
+    var spectrumGameState: SpectrumGameState = .instructions
+    var spectrumPrompt: SpectrumPrompt?
+    var spectrumGuesses = [MCPeerID: CGFloat]()
+    
     init(name: String) {
         let peerID = MCPeerID(displayName: name)
         
@@ -42,7 +50,6 @@ class MCHostManager: NSObject, ObservableObject {
         
         session?.delegate = self
         advertiser.delegate = self
-
     }
     
     /*
@@ -128,11 +135,14 @@ extension MCHostManager: MCSessionDelegate {
             case "infectedVector":
                 let vector_data = try mcData.decodeData(id: mcData.id, as: Vector.self)
                 infectedPlayers.first(where: {$0.id.displayName == peerID.displayName})?.move(by: vector_data)
-//                print("Received vector: \(vector_data)")
-            case "spectrumPromptFromPrompter":
+            case "spectrumHintFromPrompter":
                 let prompt = try mcData.decodeData(id: mcData.id, as: MCDataString.self)
-                sendPrompt(data, peerID)
-                
+                print("Recieved hint: \(prompt.message)")
+                sendHint(data, peerID)
+            case "spectrumGuess":
+                let guess = try mcData.decodeData(id: mcData.id, as: MCDataFloat.self)
+                print("Recieved guess from: \(peerID.displayName): \(guess.num)")
+                spectrumGuesses[peerID] = guess.num
             //Add Additional Cases Here:
             default:
                 print("Unhandled ID: \(mcData.id)")
@@ -167,18 +177,26 @@ extension MCHostManager: MCNearbyServiceAdvertiserDelegate {
 
 
 extension MCHostManager {
-    
     //SPECTRUM
     //Sends the prompt to the other players
-    func sendPrompt(_ promptData: Data, _ sender: MCPeerID) {
+    func sendHint(_ promptData: Data, _ sender: MCPeerID) {
         guard let session else {
             print("Could not send prompt, no session active")
             return
         }
         
         do {
-            let recipients = session.connectedPeers.filter { $0 != sender }
+            let recipients = gameParticipants.compactMap { player in
+                player.id == sender ? nil : player.id
+            }
+            
+            guard !recipients.isEmpty else {
+                print("NOBODY TO SEND HINT TO")
+                return
+            }
+            
             try session.send(promptData, toPeers: recipients, with: .reliable)
+            print("Send hint")
         } catch {
             print("Failed to send data: \(error.localizedDescription)")
         }
@@ -199,6 +217,92 @@ extension MCHostManager {
             try session.send(data, toPeers: session.connectedPeers, with: .reliable)
         } catch {
             print("Failed to send data: \(error.localizedDescription)")
+        }
+    }
+    
+    //SPECTRUM: GAME STATE MANAGEMENT
+    func sendSpectrumState(_ spectrumStateData: SpectrumGameState) {
+        guard let session else {
+            print("Could not send game state, no session active")
+            return
+        }
+        
+        do {
+            var mcData = MCData(id:"spectrumGameState")
+            try mcData.encodeData(id: "spectrumGameState", data: spectrumStateData)
+            let data = try JSONEncoder().encode(mcData)
+            
+            let participantIDs: [MCPeerID] = gameParticipants.compactMap { player in
+                player.id
+            }
+            try session.send(data, toPeers: participantIDs, with: .reliable)
+        } catch {
+            print("Failed to send data: \(error.localizedDescription)")
+        }
+    }
+    
+     //SPECTRUM:
+    func sendPrompt(hinter: MCPeerID) {
+        guard let session else {
+            print("Could not send prompt, no session active")
+            return
+        }
+        
+        do {
+            var promptData = MCData(id:"promptData")
+            try promptData.encodeData(id: "promptData", data: SpectrumPrompt())
+            
+            guard let data = promptData.data else {
+                print("Data failed")
+                return
+            }
+            
+            let recipients = session.connectedPeers.filter { $0 != hinter }
+            try session.send(data, toPeers: recipients, with: .reliable)
+        } catch {
+            print("Failed to send data: \(error.localizedDescription)")
+        }
+    }
+    
+    func sendOutInitialSpectrumData() {
+        guard let session else {
+            print("Could not send spectrum data, no session active")
+            return
+            
+        }
+        guard gameParticipants.count > 1 else {
+            print("Could not send out initital spectrum data: Not enought participants")
+            return
+        }
+        
+        print("There are currently: \(gameParticipants.count) players")
+        
+        let hinter = gameParticipants.randomElement()
+        guard let hinter else {
+            print("NO RANDOM HINTER FOUND")
+            return
+        }
+        
+        do {
+            var promptData = MCData(id:"spectrumPrompt")
+            let prompt = SpectrumPrompt()
+            self.spectrumPrompt = prompt
+            try promptData.encodeData(id: "spectrumPrompt", data: prompt)
+            var data = try JSONEncoder().encode(promptData)
+            
+            let participants: [MCPeerID] = gameParticipants.compactMap { participant in
+                participant == hinter ? nil : participant.id
+            }
+            
+            try session.send(data, toPeers: participants, with: .reliable)
+            prompt.isHinter = true
+            try promptData.encodeData(id: "spectrumPrompt", data: prompt)
+            data = try JSONEncoder().encode(promptData)
+            try session.send(data, toPeers: [hinter.id], with: .reliable)
+            
+            sendSpectrumState(.whosPrompting)
+        } catch {
+            print("Failed to send data: \(error)")
         }
     }
     

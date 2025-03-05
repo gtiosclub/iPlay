@@ -25,8 +25,7 @@ struct ContentViewMac: View {
                             Infected(mcManager: mcManager)
                                 .onAppear {
                                     mcManager.startInfectedGame()
-                                }
-                            
+                                } 
                         case .Spectrum:
                             Text("Spectrum")
                         }

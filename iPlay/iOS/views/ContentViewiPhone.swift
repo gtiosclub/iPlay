@@ -5,6 +5,8 @@
 //  Created by Danny Byrd on 2/5/25.
 //
 
+#if os(iOS)
+
 import SwiftUI
 import MultipeerConnectivity
 
@@ -13,9 +15,11 @@ struct ContentViewiPhone: View {
     @State private var mcManager: MCPlayerManager?
     @State private var isNavigating = false
     var body: some View {
-        NavigationStack{
+        NavigationStack {
             if let mcManager {
                 switch mcManager.viewState {
+                case .scoreboard:
+                    Text("Look at the scoreboard!")
                 case .preLobby:
                     VStack {
                         Text("Looking for lobbies...")
@@ -40,10 +44,7 @@ struct ContentViewiPhone: View {
                     }
                     .background(.white)
                 case .inLobby:
-                    //                InfectedInGameViewiPhone()
-                    Button("Send String") {
-                        mcManager.sendPrompt("Hello")
-                    }
+                    Text("Welcome to the lobby")
                     
                 case .inGame:
                     //TODO: Add views for in Game
@@ -51,13 +52,29 @@ struct ContentViewiPhone: View {
                     case .Infected:
                         InfectedInGameViewiPhone()
                     case .Spectrum:
-                        Text("Spectrum")
-                    }
-                case .scoreboard:
-                    Text("Check your scoreboard!")
+                        switch mcManager.spectrumPhoneState {
+                        case .instructions:
+                            Color.black
+                        case .youGivingPrompt:
+                            YouAreGivingTheHintView(prompt: mcManager.spectrumPrompt!, playerManager: $mcManager)
+                        case .waitingForPrompter:
+                            YouAreGuessingStartView()
+                        case .waitForGuessers:
+                            if let prompt = mcManager.spectrumPrompt, prompt.isHinter {
+                                HintSubmittedView()
+                            } else {
+                                GuessSubmittedView()
+                            }
+                        case .youAreGuessing:
+                            YouAreGuessingView(hint: mcManager.spectrumHint!, prompt: mcManager.spectrumPrompt!.prompt, playerManager: $mcManager)
+                        case .revealingGuesses:
+                            RevealingGuessesView()
+                        case .pointsAwarded:
+                            Color.black
+                        }
                 }
-            } else {
-                
+            }
+        } else {
                 VStack(spacing:20) {
                     VStack{
                         Text("Welcome to\n").font(.system(size: 40))+Text("iPlay").font(.system(size: 40)).fontWeight(.bold)
@@ -74,27 +91,9 @@ struct ContentViewiPhone: View {
                             RoundedRectangle(cornerRadius: 30).fill(Color.clear)
                                 .stroke(Color.black, lineWidth: 1)
                         )
-#if os(iOS)
                         .autocapitalization(.none)
                         .disableAutocorrection(true)
                         .ignoresSafeArea(.keyboard)
-#endif
-                    /*
-                     This is needed since we are using a multiplatform app
-                     so we need to check if os is iOS for disabling contextual
-                     autocapitalization and autocorrect modifiers (QOL)
-                     */
-                    
-//                    Button("Look For Lobbies") {
-//                        MCPlayerManager.createSharedInstance(name: username)
-//                        mcManager = MCPlayerManager.shared
-//                        if let mcManager {
-//                            mcManager.viewState = .preLobby
-//                            mcManager.start()
-//                        } else {
-//                            print("MC Manager not initialized")
-//                        }
-//                    }
                     Button(action: {
                         MCPlayerManager.createSharedInstance(name: username)
                         mcManager = MCPlayerManager.shared
@@ -131,17 +130,12 @@ struct ContentViewiPhone: View {
                     }
                     .navigationDestination(isPresented:$isNavigating){
                         AvatarView()
-                        
                     }
-                    
-                    
                 }
             }
         }
         .preferredColorScheme(.light)
     }
 }
-
-#Preview {
-    ContentViewiPhone()
-}
+    
+#endif
