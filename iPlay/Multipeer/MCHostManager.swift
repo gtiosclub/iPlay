@@ -9,12 +9,6 @@ import Foundation
 import MultipeerConnectivity
 
 
-enum ViewState: Codable{
-    case preLobby, inLobby, inGame
-}
-enum GameState: Codable{
-    case Infected, Spectrum
-}
 
 enum SpectrumGameState: Codable {
     case instructions, whosPrompting, hintSubmitted, revealingGuesses, pointsAwarded, guessing
@@ -32,8 +26,11 @@ class MCHostManager: NSObject, ObservableObject {
     var session: MCSession?
     var peer: MCPeerID
     
+    var numInfected: Int = 0
     var gameParticipants = Set<Player>()
     var infectedPlayers: [InfectedPlayer] = []
+    var secondsElapsed: Double = 0.0
+    var timer: Timer?
     
     var viewState: ViewState = .preLobby
     var gameState: GameState = .Infected
@@ -70,6 +67,60 @@ class MCHostManager: NSObject, ObservableObject {
         print("Advertising and Looking for peers")
     }
     
+    //*********  INFECTED  *********//
+    func startInfectedGame() {
+        secondsElapsed = 0.0
+        numInfected = 0
+        initializeScores()
+        startTimer()
+    }
+    
+    func initializeScores() {
+        for i in infectedPlayers.indices {
+            infectedPlayers[i].points = 0
+        }
+    }
+    
+    func startTimer() {
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            self.secondsElapsed += 1.0
+            
+            for i in self.infectedPlayers.indices where !self.infectedPlayers[i].isInfected {
+                self.infectedPlayers[i].points += 1
+            }
+            
+        }
+    }
+    
+    func endInfectedGame() {
+        print("ending infected!")
+        timer?.invalidate()
+        timer = nil
+        //Add game scores to total player scores
+        var updatedPlayers = gameParticipants
+
+        for infectedPlayer in infectedPlayers {
+            if let player = gameParticipants.first(where: { $0.id == infectedPlayer.id }) {
+                var updatedPlayer = player
+                updatedPlayer.points += Int(infectedPlayer.points)
+            
+                updatedPlayers.remove(player)
+                updatedPlayers.insert(updatedPlayer)
+            }
+        }
+        gameParticipants = updatedPlayers
+        viewState = .scoreboard
+    }
+    
+    func infectScore(infectorIndex: Int, infectedIndex: Int) {
+//        let basePoints = Int(ceil(120.0 / Double(infectedPlayers.count - 1)))
+        
+        if !infectedPlayers[infectedIndex].isInfected {
+            infectedPlayers[infectorIndex].points += 20
+            infectedPlayers[infectedIndex].isInfected = true
+        }
+    }
+    
 }
 
 extension MCHostManager: MCSessionDelegate {
@@ -84,7 +135,6 @@ extension MCHostManager: MCSessionDelegate {
             case "infectedVector":
                 let vector_data = try mcData.decodeData(id: mcData.id, as: Vector.self)
                 infectedPlayers.first(where: {$0.id.displayName == peerID.displayName})?.move(by: vector_data)
-                print("Received vector: \(vector_data)")
             case "spectrumHintFromPrompter":
                 let prompt = try mcData.decodeData(id: mcData.id, as: MCDataString.self)
                 print("Recieved hint: \(prompt.message)")
@@ -153,7 +203,7 @@ extension MCHostManager {
     }
     
     //GAME STATE MANAGEMENT
-    func sendGameState(_ gameStateData: GameState) {
+    func sendGameState() {
         guard let session else {
             print("Could not send game state, no session active")
             return
@@ -225,6 +275,8 @@ extension MCHostManager {
             return
         }
         
+        print("There are currently: \(gameParticipants.count) players")
+        
         let hinter = gameParticipants.randomElement()
         guard let hinter else {
             print("NO RANDOM HINTER FOUND")
@@ -254,5 +306,21 @@ extension MCHostManager {
         }
     }
     
+    func sendInfectedState(_ state: MCInfectedState) {
+        guard let session else {
+            print("Could not send infected state, no session active")
+            return
+        }
+        do {
+            var mcData = MCData(id:"infectedState")
+            try mcData.encodeData(id: "infectedState", data: state)
+            let data = try JSONEncoder().encode(mcData)
+            
+            try session.send(data, toPeers: session.connectedPeers, with: .reliable)
+        } catch {
+            print("Failed to send data: \(error.localizedDescription)")
+        }
+        
+    }
     //Add other Multipeer Connectivity send functions here:
 }

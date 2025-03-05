@@ -31,29 +31,30 @@ struct LobbyView: View {
             }
             
             Button("Start Game: \(mcManager.gameState)") {
-                if mcManager.gameParticipants.count >= 1 {
-        
                     if mcManager.gameState == .Infected {
                         createInfectedPlayers()
                     }
-                    mcManager.sendGameState(.Spectrum)
-                    
                     mcManager.viewState = .inGame
                     if mcManager.gameState == .Spectrum {
                         print("Sending out spectrum data")
                         mcManager.sendOutInitialSpectrumData()
                     }
-                }
+                    mcManager.sendGameState()
             }
             .padding(.vertical, 40)
+            .disabled(mcManager.gameParticipants.count < 1)
         }
     }
     func createInfectedPlayers() {
+        mcManager.infectedPlayers.removeAll()
         for player in mcManager.gameParticipants {
             mcManager.infectedPlayers.append(InfectedPlayer(id: player.id, name: player.id.displayName, isInfected: false))
         }
         let randomIndex = Int.random(in: 0..<mcManager.infectedPlayers.count)
         mcManager.infectedPlayers[randomIndex].isInfected = true
+        let infectedState = MCInfectedState(infected: true, playerID: mcManager.infectedPlayers[randomIndex].id.displayName)
+        mcManager.sendInfectedState(infectedState)
+        print("sent infected state")
         
     }
 }

@@ -20,6 +20,7 @@ class MCPlayerManager: NSObject {
     var session: MCSession?
     
     var currentPlayer: Player
+    var currentInfectedStatus: Bool = false
     var host: MCPeerID?
     var openLobbies = Set<Lobby>()
     
@@ -134,6 +135,14 @@ extension MCPlayerManager: MCSessionDelegate {
                 print("Decoded initial spectrum prompt: \(prompt.prompt)")
                 self.spectrumPrompt = prompt
                 //Add Additional Cases Here:
+            case "infectedState":
+                let infectedState = try mcData.decodeData(id: "infectedState", as: MCInfectedState.self)
+                print(infectedState)
+                if infectedState.playerID == self.currentPlayer.id.displayName {
+                    currentInfectedStatus = infectedState.infected
+                    print(currentPlayer)
+                }
+                
             default:
                 print("Unhandled ID: \(mcData.id)")
             }

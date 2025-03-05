@@ -10,33 +10,42 @@ import SpriteKit
 class InfectedGame: SKScene {
     override func didMove(to: SKView) {
         self.backgroundColor = .gray
-        generateObstacles()
         generatePlayerNodes()
+        generateObstacles()
         physicsBody = SKPhysicsBody(edgeLoopFrom: frame)
         
     }
     override func update(_ currentTime: TimeInterval) {
-        for player in MCHostManager.shared!.infectedPlayers.filter({$0.isInfected}) {
-            print("checking \(player.name)")
-            for i in MCHostManager.shared!.infectedPlayers.indices {
-                if player.playerObject.intersects(MCHostManager.shared!.infectedPlayers[i].playerObject) && player.name != MCHostManager.shared!.infectedPlayers[i].name {
+        guard let MCManager = MCHostManager.shared else { return }
+        
+        for infectorIndex in MCManager.infectedPlayers.indices where MCManager.infectedPlayers[infectorIndex].isInfected{
+            let infector = MCManager.infectedPlayers[infectorIndex]
+            
+            for infectedIndex in MCManager.infectedPlayers.indices where infectedIndex != infectorIndex {
+                let infected = MCManager.infectedPlayers[infectedIndex]
+                
+                if infector.playerObject.intersects(infected.playerObject) && infector.name != infected.name {
                     print("detected collision")
-                    infect(&MCHostManager.shared!.infectedPlayers[i])
+                    infect(infectedIndex, infectorIndex: infectorIndex)
                 }
             }
-            
+        }
+        
+        if MCManager.secondsElapsed >= 60 {
+            print("ENDING INFECTED: time ran out")
+            MCManager.endInfectedGame()
         }
     }
     
     enum ShapeType: CaseIterable {
-        case circle, rectangle
+        case circle, rectangle, polygon
     }
     
     func generateObstacles() {
         let numberOfObstacles = Int.random(in: 4...7)
         
         for _ in 0..<numberOfObstacles {
-            let shape = ShapeType.allCases.randomElement()!
+            let shape = ShapeType.allCases.randomElement()! // Gets random shape from ShapeType
             var position: CGPoint
             
             //Random Shape Selection
@@ -45,6 +54,7 @@ class InfectedGame: SKScene {
             case .circle: obstacle = SKShapeNode(circleOfRadius: CGFloat.random(in: 40...100))
             case .rectangle: obstacle = SKShapeNode(rectOf: CGSize(width: CGFloat.random(in: 70...200), height: CGFloat.random(in: 70...200)))
                 //T0-DO: generate obstacles of more shapes, polygons using CGMutablePath
+            case .polygon: obstacle = SKShapeNode(path: polygonPath(sides: Int.random(in: 5...8), x: CGFloat.random(in: 50...(frame.width - 50)), y: CGFloat.random(in: 50...(frame.height - 50)), offset: 0))
             }
             //Select future position for obstacle
             repeat {
@@ -57,6 +67,7 @@ class InfectedGame: SKScene {
             //Color and Outline
             obstacle.fillColor = SKColor(red: CGFloat.random(in: 0...1), green: CGFloat.random(in: 0...1), blue: CGFloat.random(in: 0...1), alpha: 1.0)
             obstacle.strokeColor = .black
+            obstacle.lineWidth = 5
             //Rotation
             obstacle.zRotation += .pi * CGFloat.random(in: 0..<2)
             //Physics Collision
@@ -68,6 +79,45 @@ class InfectedGame: SKScene {
         }
     }
     
+    /**
+     Creates the points of the polygon.
+     - Parameters:
+        - sides: The number of sides of the polygon
+        - x: The x-coordinate of the center of the polygon
+        - y: The y-coordinate of the center of the polygon
+        - radius: The radius of the polygon
+        - offset: Change where a view is drawn
+     - Returns: An array of the points of the polygon.
+     */
+    func polygonPointArray(sides: Int, x: CGFloat, y: CGFloat, offset: CGFloat) -> [CGPoint] {
+        let angle = (360/CGFloat(sides)).radians() // .radians() is a function created in the extension of CGFloat
+        let cx = x // x origin
+        let cy = y // y origin
+        var i = 0
+        var points = [CGPoint]()
+        while i <= sides {
+            let r = CGFloat.random(in: 40...100)
+            let xpo = cx + r * cos(angle * CGFloat(i) - offset.radians()) // parametric equation of a circle
+            let ypo = cy + r * sin(angle * CGFloat(i) - offset.radians()) // parametric equation of a circle
+            points.append(CGPoint(x: xpo, y: ypo))
+            i += 1
+        }
+        return points
+    }
+    
+    //Creates path for a polygon
+    func polygonPath(sides: Int, x: CGFloat, y: CGFloat, offset: CGFloat) -> CGPath {
+        let path = CGMutablePath.init()
+        let points = polygonPointArray(sides: sides, x: x, y: y, offset: offset)
+        let cpg = points[0]
+        path.move(to: CGPoint(x: cpg.x, y: cpg.y))
+        for point in points {
+            path.addLine(to: CGPoint(x: point.x, y: point.y))
+        }
+        path.closeSubpath()
+        return path
+    }
+    
     //Check if Obstacle will be spawned too close to obstacles & players
     func isTooClose(_ position: CGPoint) -> Bool {
         for obstacle in children {
@@ -75,7 +125,7 @@ class InfectedGame: SKScene {
             let dy = position.y - obstacle.position.y
             let distance = sqrt(dx * dx + dy * dy)
             
-            if distance < 200 {
+            if distance < 300 {
                 return true
             }
         }
@@ -133,9 +183,30 @@ class InfectedGame: SKScene {
         return spawnPoints
     }
     
-    func infect(_ player: inout InfectedPlayer) {
-        player.isInfected = true
-        (player.playerObject as! SKShapeNode).fillColor = player.isInfected ? .red : .green
+    func infect(_ infectedIndex: Int, infectorIndex: Int) {
+        guard let mcManager = MCHostManager.shared else { return }
+
+        if !mcManager.infectedPlayers[infectedIndex].isInfected {
+            mcManager.infectScore(infectorIndex: infectorIndex, infectedIndex: infectedIndex)
+            (mcManager.infectedPlayers[infectedIndex].playerObject as! SKShapeNode).fillColor = .red
+            mcManager.numInfected += 1  // Increment the count of infected players
+            if mcManager.numInfected == mcManager.infectedPlayers.count - 1 {
+                print("ENDING INFECTED: everyone is infected")
+                mcManager.endInfectedGame()
+            }
+            
+        }
+        
     }
+
 }
 
+extension CGFloat {
+    
+    /// Converts an angle in degrees to radians.
+    /// - Returns: An angle in radians.
+    func radians() -> CGFloat {
+        let rad = CGFloat(Double.pi) * (self/180)
+        return rad
+    }
+}

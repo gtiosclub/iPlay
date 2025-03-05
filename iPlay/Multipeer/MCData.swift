@@ -45,6 +45,8 @@ struct MCData: Codable {
             self.data = encodedData
         case "spectrumGuess":
             let encodedData = try? JSONEncoder().encode(data as? MCDataFloat)
+        case "infectedState":
+            let encodedData = try? JSONEncoder().encode(data as? MCInfectedState)
             guard let encodedData = encodedData else {
                 throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
             }
@@ -79,6 +81,12 @@ struct MCData: Codable {
             return prompt as! T
         case "spectrumPrompt":
             let prompt = try JSONDecoder().decode(SpectrumPrompt.self, from: data)
+            guard prompt is T else {
+                throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
+            }
+            return prompt as! T
+        case "infectedState":
+            let prompt = try JSONDecoder().decode(MCInfectedState.self, from: data)
             guard prompt is T else {
                 throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
             }
