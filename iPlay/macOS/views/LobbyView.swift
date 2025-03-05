@@ -43,7 +43,6 @@ struct LobbyView: View {
                         print("Sending out spectrum data")
                         mcManager.sendOutInitialSpectrumData()
                     }
-                    
                 }
             }
             .padding(.vertical, 40)
