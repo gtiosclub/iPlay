@@ -45,6 +45,10 @@ struct MCData: Codable {
             self.data = encodedData
         case "spectrumGuess":
             let encodedData = try? JSONEncoder().encode(data as? MCDataFloat)
+            guard let encodedData = encodedData else {
+                throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
+            }
+            self.data = encodedData
         case "infectedState":
             let encodedData = try? JSONEncoder().encode(data as? MCInfectedState)
             guard let encodedData = encodedData else {
