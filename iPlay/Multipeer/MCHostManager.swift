@@ -143,6 +143,9 @@ extension MCHostManager: MCSessionDelegate {
                 let guess = try mcData.decodeData(id: mcData.id, as: MCDataFloat.self)
                 print("Recieved guess from: \(peerID.displayName): \(guess.num)")
                 spectrumGuesses[peerID] = guess.num
+                if spectrumGuesses.count == gameParticipants.count - 1 {
+                    //Do scoring
+                }
             //Add Additional Cases Here:
             default:
                 print("Unhandled ID: \(mcData.id)")

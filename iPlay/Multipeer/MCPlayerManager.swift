@@ -219,6 +219,8 @@ extension MCPlayerManager {
         } catch {
             print("Failed to send data: \(error.localizedDescription)")
         }
+        
+        spectrumPhoneState = .waitForGuessers
     }
     
     func submitGuess(guess: CGFloat) {
