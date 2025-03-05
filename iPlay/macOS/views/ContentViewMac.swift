@@ -26,7 +26,7 @@ struct ContentViewMac: View {
                             }
                     
                     case .Spectrum:
-                        Text("Spectrum")
+                    SpectrumView()
                 }
             default:
                 Color.blue
