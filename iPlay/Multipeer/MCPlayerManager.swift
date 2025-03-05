@@ -89,7 +89,7 @@ extension MCPlayerManager: MCSessionDelegate {
             switch mcData.id {
             case "spectrumHintFromPrompter":
                 let prompt = try mcData.decodeData(id: mcData.id, as: MCDataString.self)
-                print("Recieved prompt!! \(prompt.message)")
+                print("Recieved hint: \(prompt.message)")
                 spectrumHint = prompt.message
                 spectrumPhoneState = .youAreGuessing
                 
@@ -126,10 +126,7 @@ extension MCPlayerManager: MCSessionDelegate {
                 default:
                     spectrumPhoneState = .instructions
                     print("Game state not handled: \(spectrumGameState)")
-                        
                 }
-                print("recieved spectrum state: ", spectrumGameState)
-                
             case "spectrumPrompt":
                 let prompt = try mcData.decodeData(id: mcData.id, as: SpectrumPrompt.self)
                 print("Decoded initial spectrum prompt: \(prompt.prompt)")

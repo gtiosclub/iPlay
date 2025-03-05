@@ -44,7 +44,8 @@ struct YouAreGuessingView: View {
             Spacer()
             
             Button("Guess") {
-                playerManager.submitGuess(guess: scene.getGuess())
+                print("Guess: \(ArrowComponent.guess)")
+                playerManager.submitGuess(guess: ArrowComponent.guess)
             }
             .buttonStyle(.borderedProminent)
             
