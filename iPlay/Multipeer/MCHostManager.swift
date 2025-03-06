@@ -37,8 +37,8 @@ class MCHostManager: NSObject, ObservableObject {
     
     var spectrumGameState: SpectrumGameState = .instructions
     var spectrumPrompt: SpectrumPrompt?
-    var spectrumGuesses = [MCPeerID: CGFloat]()
-    
+    var spectrumGuesses = [PlayerGuess]()
+
     init(name: String) {
         let peerID = MCPeerID(displayName: name)
         
@@ -143,9 +143,10 @@ extension MCHostManager: MCSessionDelegate {
             case "spectrumGuess":
                 let guess = try mcData.decodeData(id: mcData.id, as: MCDataFloat.self)
                 print("Recieved guess from: \(peerID.displayName): \(guess.num)")
-                spectrumGuesses[peerID] = guess.num
+                spectrumGuesses.append(PlayerGuess(playerName: peerID.displayName, value: guess.num))
                 if spectrumGuesses.count == gameParticipants.count - 1 {
                     //Do scoring
+                    sendSpectrumState(.revealingGuesses)
                 }
             //Add Additional Cases Here:
             default:

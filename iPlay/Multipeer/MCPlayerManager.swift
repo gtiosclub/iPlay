@@ -75,9 +75,11 @@ extension MCPlayerManager: MCSessionDelegate {
             print("Connecting")
         case .connected:
             //Player has joined a lobby
-            print("IN GAME??? PeerID: \(peerID.displayName)")
-            host = peerID
-            viewState = .inLobby
+            if host == nil {
+                print("IN GAME??? PeerID: \(peerID.displayName)")
+                host = peerID
+                viewState = .inLobby
+            }
         @unknown default:
             print("Unknown State")
         }
@@ -234,11 +236,12 @@ extension MCPlayerManager {
             return
         }
         
-        let guessData = MCDataFloat(num: guess)
+        let guessData = MCDataFloat(num: guess / 10.0)
         var mcGuessData = MCData(id: "spectrumGuess")
         do {
             try mcGuessData.encodeData(id: "spectrumGuess", data: guessData)
             let encodedGuess = try JSONEncoder().encode(mcGuessData)
+            print("HOST: \(host.displayName)")
             try session.send(encodedGuess, toPeers: [host], with: .reliable)
         } catch {
             print("Failed to submit guess: \(error.localizedDescription)")
