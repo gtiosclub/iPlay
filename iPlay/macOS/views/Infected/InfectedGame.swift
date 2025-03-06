@@ -189,6 +189,8 @@ class InfectedGame: SKScene {
         if !mcManager.infectedPlayers[infectedIndex].isInfected {
             mcManager.infectScore(infectorIndex: infectorIndex, infectedIndex: infectedIndex)
             (mcManager.infectedPlayers[infectedIndex].playerObject as! SKShapeNode).fillColor = .red
+            let infectedState = MCInfectedState(infected: true, playerID: mcManager.infectedPlayers[infectedIndex].id.displayName)
+            mcManager.sendInfectedState(infectedState)
             mcManager.numInfected += 1  // Increment the count of infected players
             if mcManager.numInfected == mcManager.infectedPlayers.count - 1 {
                 print("ENDING INFECTED: everyone is infected")
