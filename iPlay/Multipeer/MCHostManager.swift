@@ -139,6 +139,7 @@ extension MCHostManager: MCSessionDelegate {
                 let prompt = try mcData.decodeData(id: mcData.id, as: MCDataString.self)
                 print("Recieved hint: \(prompt.message)")
                 sendHint(data, peerID)
+                self.spectrumGameState = .guessing
             case "spectrumGuess":
                 let guess = try mcData.decodeData(id: mcData.id, as: MCDataFloat.self)
                 print("Recieved guess from: \(peerID.displayName): \(guess.num)")
@@ -239,6 +240,7 @@ extension MCHostManager {
                 player.id
             }
             try session.send(data, toPeers: participantIDs, with: .reliable)
+            self.spectrumGameState = spectrumStateData
         } catch {
             print("Failed to send data: \(error.localizedDescription)")
         }
@@ -304,6 +306,7 @@ extension MCHostManager {
             try session.send(data, toPeers: [hinter.id], with: .reliable)
             
             sendSpectrumState(.whosPrompting)
+            self.spectrumGameState = .whosPrompting
         } catch {
             print("Failed to send data: \(error)")
         }

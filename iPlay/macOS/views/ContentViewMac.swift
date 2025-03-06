@@ -27,7 +27,7 @@ struct ContentViewMac: View {
                                     mcManager.startInfectedGame()
                                 } 
                         case .Spectrum:
-                            Text("Spectrum")
+                            SpectrumView(mcManager: mcManager)
                         }
                     default:
                         Color.blue

@@ -7,23 +7,10 @@
 
 import SwiftUI
 
-// MARK: - SpectrumPhase
-
-enum SpectrumPhase {
-    case hinterHinting
-    case guessersGo
-    case timeUp
-    case results
-    case pointsAdded
-    case newHinter
-}
-
 // MARK: - SpectrumView (Main Container)
 
 struct SpectrumView: View {
-    
-    @State private var phase: SpectrumPhase = .hinterHinting
-    
+    @ObservedObject var mcManager: MCHostManager
     
     @State private var hostRating: CGFloat = 0.5
     
@@ -39,61 +26,60 @@ struct SpectrumView: View {
     
     var body: some View {
         VStack {
-            switch phase {
-            case .hinterHinting:
+            switch mcManager.spectrumGameState {
+            case .whosPrompting:
                 HinterHintingView(
                     hostRating: $hostRating,
                     onContinue: {
-                        phase = .guessersGo
+                        mcManager.sendSpectrumState(.guessing)
                         startCountdown()
                     }
-                )
+                ).padding()
                 
-            case .guessersGo:
-                GuessersGoView(
-                    countdown: countdown,
-                    onTimeUp: {
-                        phase = .timeUp
-                        stopCountdown()
-                    }
-                )
-                
-            case .timeUp:
-                TimeUpView {
-                    phase = .results
-                    guesses = generateSampleGuesses()
+            case .guessing:
+                if countdown > 0 {
+                    GuessersGoView(
+                        countdown: countdown,
+                        onTimeUp: {
+                            mcManager.sendSpectrumState(.revealingGuesses)
+                            stopCountdown()
+                        }
+                    ).padding()
+                } else {
+                    TimeUpView {
+                        mcManager.sendSpectrumState(.revealingGuesses)
+                        guesses = generateSampleGuesses()
+                    }.padding()
                 }
-                
-            case .results:
+            case .revealingGuesses:
                 ResultsView(
                     hostRating: hostRating,
                     guesses: guesses,
                     onPointsAdded: {
                         pointsAwarded = calculatePoints(for: guesses, hostRating: hostRating)
-                        phase = .pointsAdded
+                        mcManager.sendSpectrumState(.pointsAwarded)
                     }
-                )
+                ).padding()
                 
-            case .pointsAdded:
+            case .pointsAwarded:
                 PointsAddedView(
                     pointsAwarded: pointsAwarded,
                     onNewHinter: {
-                        phase = .newHinter
+                        mcManager.sendOutInitialSpectrumData()
                     }
-                )
+                ).padding()
                 
-            case .newHinter:
+            case .instructions:
                 NewHinterView {
-                    
                     resetForNewRound()
-                }
+                }.padding()
+            default:
+                Color.black
             }
         }
-        .padding()
     }
     
     // MARK: - Timer Helpers
-    
     func startCountdown() {
         countdown = 30
         timer?.invalidate()
@@ -103,7 +89,6 @@ struct SpectrumView: View {
             } else {
                 timer?.invalidate()
                 timer = nil
-                phase = .timeUp
             }
         }
     }
@@ -138,7 +123,7 @@ struct SpectrumView: View {
         guesses = []
         pointsAwarded = [:]
         countdown = 30
-        phase = .hinterHinting
+        //TODO: Switch to new prompter
     }
 }
 
@@ -303,7 +288,6 @@ struct SpectrumResultsDial: View {
     
     var body: some View {
         ZStack {
-
             HalfCircleGradient()
                 .frame(width: 300, height: 150)
            
@@ -349,7 +333,6 @@ struct HalfCircleGradient: View {
 
 
 struct HalfCircleArc: Shape {
-    
     let startFraction: CGFloat
     let endFraction: CGFloat
     
@@ -403,7 +386,7 @@ struct SpectrumButtonStyle: ButtonStyle {
 
 struct SpectrumView_Previews: PreviewProvider {
     static var previews: some View {
-        SpectrumView()
+        SpectrumView(mcManager: .init(name: "Danny"))
     }
 }
 
