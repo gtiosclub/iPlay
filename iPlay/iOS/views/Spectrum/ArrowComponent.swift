@@ -49,7 +49,9 @@ class ArrowComponent: SKScene {
         backgroundColor = .white
         
         // Create and add the semicircle outline
-        let semicircle = createSemicirclePath(center: arcCenter, radius: 110)
+        let semicircle = SKSpriteNode(imageNamed: "SpectrumSemiCircle")
+        semicircle.setScale(0.5)
+        semicircle.position = CGPoint(x: size.width / 2, y: 0)
         addChild(semicircle)
         
         // Set arrow initial position

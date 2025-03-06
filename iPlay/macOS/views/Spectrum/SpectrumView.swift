@@ -21,59 +21,65 @@ struct SpectrumView: View {
     @State private var pointsAwarded: [String: Int] = [:]
     
     var body: some View {
-        VStack {
-            switch mcManager.spectrumGameState {
-            case .whosPrompting:
-                HinterHintingView(
-                    hostRating: $hostRating,
-                    onContinue: {
-                        mcManager.sendSpectrumState(.guessing)
-                        startCountdown()
-                    }
-                ).padding()
-                
-            case .guessing:
-                if countdown > 0 {
-                    GuessersGoView(
-                        countdown: countdown,
-                        onTimeUp: {
-                            mcManager.sendSpectrumState(.revealingGuesses)
-                            stopCountdown()
+        ZStack {
+            Image(.spectrumBackground)
+                .resizable()
+                .scaledToFill()
+                .frame(maxWidth: .infinity)
+            VStack {
+                switch mcManager.spectrumGameState {
+                case .whosPrompting:
+                    HinterHintingView(
+                        hostRating: $hostRating,
+                        onContinue: {
+                            mcManager.sendSpectrumState(.guessing)
+                            startCountdown()
                         }
-                    )
-                    .padding()
-                    .onAppear {
-                        startCountdown()
+                    ).padding()
+                    
+                case .guessing:
+                    if countdown > 0 {
+                        GuessersGoView(
+                            countdown: countdown,
+                            onTimeUp: {
+                                mcManager.sendSpectrumState(.revealingGuesses)
+                                stopCountdown()
+                            }
+                        )
+                        .padding()
+                        .onAppear {
+                            startCountdown()
+                        }
+                    } else {
+                        TimeUpView {
+                            mcManager.sendSpectrumState(.revealingGuesses)
+                        }.padding()
                     }
-                } else {
-                    TimeUpView {
-                        mcManager.sendSpectrumState(.revealingGuesses)
+                case .revealingGuesses:
+                    ResultsView(
+                        hostRating: hostRating,
+                        guesses: mcManager.spectrumGuesses,
+                        onPointsAdded: {
+                            pointsAwarded = calculatePoints(for: mcManager.spectrumGuesses, hostRating: CGFloat(mcManager.spectrumPrompt?.num ?? 0))
+                            mcManager.sendSpectrumState(.pointsAwarded)
+                        }
+                    ).padding()
+                    
+                case .pointsAwarded:
+                    PointsAddedView(
+                        pointsAwarded: pointsAwarded,
+                        onNewHinter: {
+                            mcManager.sendOutInitialSpectrumData()
+                        }
+                    ).padding()
+                    
+                case .instructions:
+                    NewHinterView {
+                        resetForNewRound()
                     }.padding()
+                default:
+                    Color.black
                 }
-            case .revealingGuesses:
-                ResultsView(
-                    hostRating: hostRating,
-                    guesses: mcManager.spectrumGuesses,
-                    onPointsAdded: {
-                        pointsAwarded = calculatePoints(for: mcManager.spectrumGuesses, hostRating: hostRating)
-                        mcManager.sendSpectrumState(.pointsAwarded)
-                    }
-                ).padding()
-                
-            case .pointsAwarded:
-                PointsAddedView(
-                    pointsAwarded: pointsAwarded,
-                    onNewHinter: {
-                        mcManager.sendOutInitialSpectrumData()
-                    }
-                ).padding()
-                
-            case .instructions:
-                NewHinterView {
-                    resetForNewRound()
-                }.padding()
-            default:
-                Color.black
             }
         }
     }
@@ -143,15 +149,16 @@ struct HinterHintingView: View {
     var body: some View {
         VStack(spacing: 20) {
             Text("Hinter is hinting! Get ready!")
-                .font(.title2)
+                .font(.system(size: 70, weight: .semibold, design: .rounded))
+                .foregroundStyle(.white)
             
 //            DialWithSlider(value: $hostRating)
 //                .frame(height: 300)
             
-            Button("Continue") {
-                onContinue()
-            }
-            .buttonStyle(SpectrumButtonStyle())
+//            Button("Continue") {
+//                onContinue()
+//            }
+//            .buttonStyle(SpectrumButtonStyle())
         }
     }
 }
@@ -163,11 +170,15 @@ struct GuessersGoView: View {
     var body: some View {
         VStack(spacing: 20) {
             Text("Guessers go!")
-                .font(.title2)
+                .font(.system(size: 20, weight: .semibold, design: .rounded))
+                .foregroundStyle(.white)
             Text("\(countdown)s left")
-                .font(.headline)
+                .font(.system(size: 20, weight: .semibold, design: .rounded))
+                .foregroundStyle(.white)
             
             Text("Make your guesses now!")
+                .font(.system(size: 20, weight: .semibold, design: .rounded))
+                .foregroundStyle(.white)
             
             Button("Time’s up now") {
                 onTimeUp()
@@ -201,19 +212,16 @@ struct ResultsView: View {
     
     var body: some View {
         VStack {
-            Spacer()
-            
             Text("Results")
                 .font(.title)
         
             SpectrumResultsDial(hostRating: hostRating, guesses: guesses)
-                .frame(height: 300)
+                .frame(height: 500)
             
             Button("Points Added") {
                 onPointsAdded()
             }
             .buttonStyle(SpectrumButtonStyle())
-            Spacer()
         }
     }
 }
@@ -261,26 +269,25 @@ struct NewHinterView: View {
 
 // MARK: - DialWithSlider (Host Setting a Rating)
 
-struct DialWithSlider: View {
-    @Binding var value: CGFloat  // 0..1
-    
-    var body: some View {
-        VStack {
-           
-            ZStack {
-                HalfCircleGradient()
-                    .frame(width: 300, height: 150)
-                
-                
-                ArrowPointer(value: value, radius: 75)
-            }
-            .frame(width: 300, height: 150)
-
-            Slider(value: $value, in: 0...1)
-                .padding(.horizontal, 40)
-        }
-    }
-}
+//struct DialWithSlider: View {
+//    @Binding var value: CGFloat  // 0..1
+//    
+//    var body: some View {
+//        VStack {
+//            ZStack {
+//                HalfCircleGradient()
+//                    .frame(height: 500)
+//                
+//                
+//                ArrowPointer(value: value, radius: 75)
+//            }
+//            .frame(width: 300, height: 150)
+//
+//            Slider(value: $value, in: 0...1)
+//                .padding(.horizontal, 40)
+//        }
+//    }
+//}
 
 // MARK: - SpectrumResultsDial (Arcs for guesses + host arrow)
 
@@ -292,28 +299,27 @@ struct SpectrumResultsDial: View {
     var body: some View {
         ZStack {
             HalfCircleGradient()
-                .frame(width: 1000, height: 500)
+    
             
             ArrowPointer(value: hostRating, radius: 150)
             ForEach(guesses.indices, id: \.self) { i in
-                ArrowPointer(value: guesses[i].value, radius: 200)
+                ArrowPointer(value: guesses[i].value, radius: 150)
                     .foregroundStyle(guessColor(i))
             }
-            
-            ForEach(guesses.indices, id: \.self) { i in
-                            let guess = guesses[i]
-                            let arcSize: CGFloat = 0.02
-                            let start = guess.value - arcSize/2
-                            let end   = guess.value + arcSize/2
-                            let from = min(max(start, 0), 1)
-                            let to   = min(max(end, 0), 1)
-                            
-                            HalfCircleArc(startFraction: from, endFraction: to)
-                                .fill(guessColor(i))
-                                .frame(width: 300, height: 150)
-                        }
+//            
+//            ForEach(guesses.indices, id: \.self) { i in
+//                            let guess = guesses[i]
+//                            let arcSize: CGFloat = 0.02
+//                            let start = guess.value - arcSize/2
+//                            let end   = guess.value + arcSize/2
+//                            let from = min(max(start, 0), 1)
+//                            let to   = min(max(end, 0), 1)
+//                            
+//                            HalfCircleArc(startFraction: from, endFraction: to)
+//                                .fill(guessColor(i))
+//                                .frame(width: 300, height: 150)
+//                        }
         }
-        .frame(width: 300, height: 150)
         .onAppear {
             print("GUESSES: \(guesses.count)")
             for guess in guesses {
@@ -335,12 +341,9 @@ struct HalfCircleGradient: View {
         Circle()
             .trim(from: 0.5, to: 1.0)
             .fill(
-                LinearGradient(
-                    gradient: Gradient(colors: [Color.pink, Color.purple]),
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
+                .white
             )
+            .stroke(.black, lineWidth: 5)
     }
 }
 
