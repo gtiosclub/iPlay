@@ -11,8 +11,13 @@ struct YouAreGuessingStartView: View {
     var body: some View {
         VStack {
             Text("You are guessing!")
-                .bold()
+                .font(.system(size: 20, weight: .bold, design: .rounded))
+                .foregroundStyle(.black)
+
             Text("Wait for the hint...")
+                .font(.system(size: 20, weight: .bold, design: .rounded))
+                .foregroundStyle(.black)
+
         }
     }
 }

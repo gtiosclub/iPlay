@@ -33,6 +33,7 @@ class ArrowComponent: SKScene {
         scaleMode = .resizeFill
         let arcCenter = CGPoint(x: size.width / 2, y: 0)
         logic = ArrowComponentLogic(center: arcCenter, radius: 100)
+        backgroundColor = .clear
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -45,8 +46,9 @@ class ArrowComponent: SKScene {
     
     override func didMove(to view: SKView) {
         let arcCenter = CGPoint(x: size.width / 2, y: 0)
-        
-        backgroundColor = .white
+        view.allowsTransparency = true 
+        backgroundColor = .clear
+        view.backgroundColor = .clear
         
         // Create and add the semicircle outline
         let semicircle = SKSpriteNode(imageNamed: "SpectrumSemiCircle")
@@ -116,9 +118,8 @@ class ArrowComponent: SKScene {
         guard clickAngle <= CGFloat.pi else { return }
         
         let continuousValue = (1 - (clickAngle / CGFloat.pi)) * 10
-        let nearestValue = round(continuousValue)
         
-        updateArrowPosition(for: nearestValue)
+        updateArrowPosition(for: continuousValue)
     }
 }
 

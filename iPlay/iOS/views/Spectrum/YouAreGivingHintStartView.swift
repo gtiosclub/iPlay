@@ -10,6 +10,8 @@ import SwiftUI
 struct YouAreGivingHintStartView: View {
     var body: some View {
         Text("You are giving the hint!")
+            .font(.system(size: 20, weight: .bold, design: .rounded))
+            .foregroundStyle(.black)
     }
 }
 
