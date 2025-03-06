@@ -13,6 +13,7 @@ struct YouAreGivingTheHintView: View {
         newScene.scaleMode = .resizeFill
         newScene.updateArrowPosition(for: CGFloat(prompt.num))
         newScene.setAreTouchesEnabled(to: false)
+        newScene.backgroundColor = .clear
 
         _scene = State(initialValue: newScene)
         self.prompt = prompt
@@ -23,11 +24,16 @@ struct YouAreGivingTheHintView: View {
         VStack {
             Spacer()
             Text("You are giving the hint")
+                .font(.system(size: 20, weight: .bold, design: .rounded))
                 .foregroundStyle(.black)
-            Text("Prompt: \(prompt.prompt)")
+            
+            SpriteView(scene: scene, options: .allowsTransparency)
+                .frame(width: 300, height: 120)
+                .background(Color.clear)
+
+            Text("\(prompt.prompt)")
+                .font(.system(size: 20, weight: .bold, design: .rounded))
                 .foregroundStyle(.black)
-            SpriteView(scene: scene)
-                .frame(width: 400, height: 150)
             
             TextField("Type your hint here", text: $hint)
                 .foregroundStyle(.gray)

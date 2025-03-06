@@ -52,25 +52,37 @@ struct ContentViewiPhone: View {
                     case .Infected:
                         InfectedInGameViewiPhone()
                     case .Spectrum:
-                        switch mcManager.spectrumPhoneState {
-                        case .instructions:
-                            Color.black
-                        case .youGivingPrompt:
-                            YouAreGivingTheHintView(prompt: mcManager.spectrumPrompt!, playerManager: $mcManager)
-                        case .waitingForPrompter:
-                            YouAreGuessingStartView()
-                        case .waitForGuessers:
-                            if let prompt = mcManager.spectrumPrompt, prompt.isHinter {
-                                HintSubmittedView()
-                            } else {
-                                GuessSubmittedView()
+                        ZStack {
+                            Image(.spectrumPhoneBackground)
+                                .resizable()
+                                .scaledToFill()
+                                .ignoresSafeArea()
+                                .frame(maxWidth: .infinity)
+                                
+                            switch mcManager.spectrumPhoneState {
+                            case .instructions:
+                                Text("Look at the screen to see how you did!")
+                                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                                    .foregroundStyle(.black)
+                            case .youGivingPrompt:
+                                YouAreGivingTheHintView(prompt: mcManager.spectrumPrompt!, playerManager: $mcManager)
+                            case .waitingForPrompter:
+                                YouAreGuessingStartView()
+                            case .waitForGuessers:
+                                if let prompt = mcManager.spectrumPrompt, prompt.isHinter {
+                                    HintSubmittedView()
+                                } else {
+                                    GuessSubmittedView()
+                                }
+                            case .youAreGuessing:
+                                YouAreGuessingView(hint: mcManager.spectrumHint!, prompt: mcManager.spectrumPrompt!.prompt, playerManager: $mcManager)
+                            case .revealingGuesses:
+                                RevealingGuessesView()
+                            case .pointsAwarded:
+                                Text("Look at the screen to see how you did!")
+                                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                                    .foregroundStyle(.black)
                             }
-                        case .youAreGuessing:
-                            YouAreGuessingView(hint: mcManager.spectrumHint!, prompt: mcManager.spectrumPrompt!.prompt, playerManager: $mcManager)
-                        case .revealingGuesses:
-                            RevealingGuessesView()
-                        case .pointsAwarded:
-                            Color.black
                         }
                 }
             }
