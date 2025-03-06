@@ -14,10 +14,6 @@ struct SpectrumView: View {
     
     @State private var hostRating: CGFloat = 0.5
     
-    
-    @State private var guesses: [PlayerGuess] = []
-    
-    
     @State private var countdown: Int = 30
     @State private var timer: Timer? = nil
     
@@ -44,19 +40,22 @@ struct SpectrumView: View {
                             mcManager.sendSpectrumState(.revealingGuesses)
                             stopCountdown()
                         }
-                    ).padding()
+                    )
+                    .padding()
+                    .onAppear {
+                        startCountdown()
+                    }
                 } else {
                     TimeUpView {
                         mcManager.sendSpectrumState(.revealingGuesses)
-                        guesses = generateSampleGuesses()
                     }.padding()
                 }
             case .revealingGuesses:
                 ResultsView(
                     hostRating: hostRating,
-                    guesses: guesses,
+                    guesses: mcManager.spectrumGuesses,
                     onPointsAdded: {
-                        pointsAwarded = calculatePoints(for: guesses, hostRating: hostRating)
+                        pointsAwarded = calculatePoints(for: mcManager.spectrumGuesses, hostRating: hostRating)
                         mcManager.sendSpectrumState(.pointsAwarded)
                     }
                 ).padding()
@@ -112,7 +111,7 @@ struct SpectrumView: View {
         var results: [String: Int] = [:]
         
         for guess in guesses {
-            let distance = abs(guess.value - hostRating)
+            let distance = abs(guess.value - CGFloat(mcManager.spectrumPrompt?.num ?? 0))
             results[guess.playerName] = (distance < 0.1) ? 10 : 0
         }
         return results
@@ -120,7 +119,7 @@ struct SpectrumView: View {
     
     func resetForNewRound() {
         hostRating = 0.5
-        guesses = []
+        mcManager.spectrumGuesses = []
         pointsAwarded = [:]
         countdown = 30
         //TODO: Switch to new prompter
@@ -146,8 +145,8 @@ struct HinterHintingView: View {
             Text("Hinter is hinting! Get ready!")
                 .font(.title2)
             
-            DialWithSlider(value: $hostRating)
-                .frame(height: 300)
+//            DialWithSlider(value: $hostRating)
+//                .frame(height: 300)
             
             Button("Continue") {
                 onContinue()
@@ -201,7 +200,9 @@ struct ResultsView: View {
     var onPointsAdded: () -> Void
     
     var body: some View {
-        VStack(spacing: 20) {
+        VStack {
+            Spacer()
+            
             Text("Results")
                 .font(.title)
         
@@ -212,6 +213,7 @@ struct ResultsView: View {
                 onPointsAdded()
             }
             .buttonStyle(SpectrumButtonStyle())
+            Spacer()
         }
     }
 }
@@ -238,6 +240,7 @@ struct PointsAddedView: View {
 }
 
 struct NewHinterView: View {
+    
     var onStartNewRound: () -> Void
     
     var body: some View {
@@ -289,24 +292,34 @@ struct SpectrumResultsDial: View {
     var body: some View {
         ZStack {
             HalfCircleGradient()
-                .frame(width: 300, height: 150)
-           
+                .frame(width: 1000, height: 500)
+            
+            ArrowPointer(value: hostRating, radius: 150)
             ForEach(guesses.indices, id: \.self) { i in
-                let guess = guesses[i]
-                let arcSize: CGFloat = 0.02
-                let start = guess.value - arcSize/2
-                let end   = guess.value + arcSize/2
-                let from = min(max(start, 0), 1)
-                let to   = min(max(end, 0), 1)
-                
-                HalfCircleArc(startFraction: from, endFraction: to)
-                    .fill(guessColor(i))
-                    .frame(width: 300, height: 150)
+                ArrowPointer(value: guesses[i].value, radius: 200)
+                    .foregroundStyle(guessColor(i))
             }
             
-            ArrowPointer(value: hostRating, radius: 75)
+            ForEach(guesses.indices, id: \.self) { i in
+                            let guess = guesses[i]
+                            let arcSize: CGFloat = 0.02
+                            let start = guess.value - arcSize/2
+                            let end   = guess.value + arcSize/2
+                            let from = min(max(start, 0), 1)
+                            let to   = min(max(end, 0), 1)
+                            
+                            HalfCircleArc(startFraction: from, endFraction: to)
+                                .fill(guessColor(i))
+                                .frame(width: 300, height: 150)
+                        }
         }
         .frame(width: 300, height: 150)
+        .onAppear {
+            print("GUESSES: \(guesses.count)")
+            for guess in guesses {
+                print(guess.value)
+            }
+        }
     }
     
     func guessColor(_ index: Int) -> Color {
