@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Vector: Codable{
+struct Vector: Codable, Hashable{
     let x: Double
     let y: Double
 }

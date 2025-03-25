@@ -30,6 +30,18 @@ struct LobbyView: View {
                 mcManager.gameState = .Spectrum
             }
             
+            Button("Dog Fight") {
+                mcManager.gameState = .DogFight
+            }
+            
+            Button("Emoji Match") {
+                mcManager.gameState = .EmojiMatch
+            }
+            
+            Button("Chain") {
+                mcManager.gameState = .Chain
+            }
+            
             Button("Start Game: \(mcManager.gameState)") {
                     if mcManager.gameState == .Infected {
                         createInfectedPlayers()

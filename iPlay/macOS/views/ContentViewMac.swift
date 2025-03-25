@@ -28,7 +28,17 @@ struct ContentViewMac: View {
                                 } 
                         case .Spectrum:
                             SpectrumView(mcManager: mcManager)
+                            
+                        case .DogFight:
+                            DogFight(mcManager: mcManager)
+                        
+                        case .EmojiMatch:
+                            Text("EmojiMatch")
+                        case .Chain:
+                            Text("Chain")
                         }
+                        
+                    
                     default:
                         Color.blue
                     }

@@ -51,6 +51,12 @@ struct ContentViewiPhone: View {
                     switch mcManager.gameState {
                     case .Infected:
                         InfectedInGameViewiPhone()
+                    case .DogFight:
+                        DogFightiPhoneView()
+                    case .Chain:
+                        Text("Insert chain view here")
+                    case .EmojiMatch:
+                        Text("insert emoji match view here")
                     case .Spectrum:
                         ZStack {
                             Image(.spectrumPhoneBackground)
