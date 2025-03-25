@@ -8,5 +8,5 @@
 import Foundation
 
 enum GameState: Codable{
-    case Infected, Spectrum
+    case Infected, Spectrum, DogFight, EmojiMatch, Chain
 }
