@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct ButtonOverlay: View {
+    var onPress: () -> Void
     @State private var isPressed = false
     
     var body: some View {
@@ -28,11 +29,12 @@ struct ButtonOverlay: View {
                         }
                         .onEnded { _ in
                             isPressed = false
+                            onPress()
                         }
                 )
         }
     }
 }
 #Preview {
-    ButtonOverlay()
+    ButtonOverlay(onPress: {})
 }

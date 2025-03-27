@@ -11,6 +11,8 @@ struct DogFightiPhoneView: View {
     @State private var countdownStep = 3
     @State private var showCountdown = true
     @State private var wasHit = false
+    @State private var tookDamage = false
+
     let countdownInterval = 1.0
     
     var body: some View {
@@ -37,7 +39,9 @@ struct DogFightiPhoneView: View {
                         .padding(.bottom, 60)
                         .font(.system(size: 20))
                         .multilineTextAlignment(.center)
-                    ButtonOverlay()
+                    ButtonOverlay(onPress: {
+                        loseLife()
+                    })
                         .padding(.bottom, 20)
                     Image("BlenderSprite")
                         .resizable()
@@ -45,6 +49,13 @@ struct DogFightiPhoneView: View {
                         .frame(width: 110, height: 200)
                         .padding(.bottom, 60)
                 }
+            }
+            
+            if tookDamage {
+                Color.red
+                    .opacity(0.5)
+                    .ignoresSafeArea()
+                    .transition(.opacity)
             }
         }
     }
@@ -58,6 +69,17 @@ struct DogFightiPhoneView: View {
                 withAnimation(.easeInOut(duration: 0.5)) {
                     showCountdown = false
                 }
+            }
+        }
+    }
+    
+    func loseLife() {
+        withAnimation(.easeIn(duration: 0.1)) {
+            tookDamage = true
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            withAnimation(.easeOut(duration: 1.0)) {
+                tookDamage = false
             }
         }
     }
