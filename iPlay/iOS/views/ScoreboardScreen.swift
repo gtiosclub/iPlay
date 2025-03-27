@@ -36,7 +36,7 @@ struct ScoreboardScreen: View {
                             .font(.title2)
                             .bold()
                             .padding(.trailing, 10)
-                        player.avatar
+                        Image(player.avatar)
                             .resizable()
                             .frame(width: 40, height: 40)
                             .clipShape(Circle())
@@ -65,19 +65,19 @@ struct ScoreboardView_Previews: PreviewProvider {
     static var previews: some View {
         let player1 = Player(id: MCPeerID(displayName: "Karen"),
                              username: "Karen",
-                             avatar: Image(systemName: "person.fill"),
+                             avatar: "BottleSprite",
                              points: 100)
         let player2 = Player(id: MCPeerID(displayName: "Saahiti"),
                              username: "Saahiti123",
-                             avatar:Image(systemName: "person.fill"),
+                             avatar: "BottleSprite",
                              points: 50)
         let player3 = Player(id: MCPeerID(displayName: "Shivani"),
                              username: "Shivani",
-                             avatar: Image(systemName: "person.fill"),
+                             avatar: "BottleSprite",
                              points: 115)
         let player4 = Player(id: MCPeerID(displayName: "Ronit"),
                              username: "Ronit874",
-                             avatar: Image(systemName: "person.fill"),
+                             avatar:"BottleSprite",
                              points: 12)
         ScoreboardScreen()
     }

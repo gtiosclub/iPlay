@@ -14,7 +14,7 @@ struct InfectedPlayer: Hashable, Identifiable {
     var name: String = "name"
     var isInfected: Bool = false
     var points: Int = 0
-    var playerObject: SKNode = SKShapeNode(circleOfRadius: 10)
+    var playerObject: SKSpriteNode
     let MOVEMULTIPLIER: CGFloat = 20
     
     func move(by vector: Vector) {

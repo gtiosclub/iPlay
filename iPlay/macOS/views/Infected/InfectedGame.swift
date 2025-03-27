@@ -24,7 +24,11 @@ class InfectedGame: SKScene {
             for infectedIndex in MCManager.infectedPlayers.indices where infectedIndex != infectorIndex {
                 let infected = MCManager.infectedPlayers[infectedIndex]
                 
-                if infector.playerObject.intersects(infected.playerObject) && infector.name != infected.name {
+                let dx = infector.playerObject.position.x - infected.playerObject.position.x
+                let dy = infector.playerObject.position.y - infected.playerObject.position.y
+                
+               if sqrt(dx * dx + dy * dy) < 50 && infector.name != infected.name {
+//                if infector.playerObject.intersects(infected.playerObject) && infector.name != infected.name {
                     print("detected collision")
                     infect(infectedIndex, infectorIndex: infectorIndex)
                 }
@@ -139,16 +143,23 @@ class InfectedGame: SKScene {
         for i in MCHostManager.shared!.infectedPlayers.indices {
             let player = MCHostManager.shared!.infectedPlayers[i]
             player.playerObject.position = spawnPoints[i]
-            (player.playerObject as! SKShapeNode).fillColor = player.isInfected ? .red : .green // only if player node is shape
+            //resize sprite to be correct, but keep
+            player.playerObject.size = CGSize(width: 80, height: 80)
+            print("sprite size; \(player.playerObject.size)")
+            print("player position: \(player.playerObject.position)")
+            print("player object type: \(type(of: player.playerObject))")
+//            (player.playerObject as! SKShapeNode).fillColor = player.isInfected ? .red : .green // only if player node is shape
             let name = SKLabelNode(fontNamed: "SF Compact")
             name.text = player.name
             name.fontSize = 12
-            name.position = CGPoint(x: 0, y: 16)
+            name.position = CGPoint(x: 0, y: 25)
+            name.name = "name"
+            name.fontColor = (player.isInfected ? .red : .white)
             player.playerObject.addChild(name)
             //Physics bodies set up for collision
-            //TO-DO: update the physics body shapes once we get the sprites implemented to
-            player.playerObject.physicsBody = SKPhysicsBody(circleOfRadius: 10)
+            player.playerObject.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: 50, height: 50))
             player.playerObject.physicsBody?.affectedByGravity = false
+            player.playerObject.physicsBody?.isDynamic = true
             player.playerObject.physicsBody?.allowsRotation = false
             player.playerObject.physicsBody?.collisionBitMask = 0x1
             addChild(player.playerObject)
@@ -188,7 +199,7 @@ class InfectedGame: SKScene {
 
         if !mcManager.infectedPlayers[infectedIndex].isInfected {
             mcManager.infectScore(infectorIndex: infectorIndex, infectedIndex: infectedIndex)
-            (mcManager.infectedPlayers[infectedIndex].playerObject as! SKShapeNode).fillColor = .red
+            (mcManager.infectedPlayers[infectedIndex].playerObject.childNode(withName: "name") as! SKLabelNode).fontColor = .red
             let infectedState = MCInfectedState(infected: true, playerID: mcManager.infectedPlayers[infectedIndex].id.displayName)
             mcManager.sendInfectedState(infectedState)
             mcManager.numInfected += 1  // Increment the count of infected players

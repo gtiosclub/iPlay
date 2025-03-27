@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SpriteKit
 
 struct LobbyView: View {
     @ObservedObject var mcManager: MCHostManager
@@ -17,7 +18,14 @@ struct LobbyView: View {
             List {
                 ForEach(Array(mcManager.gameParticipants)) { player in
                     Section {
-                        Text(player.id.displayName)
+                        HStack {
+                            Text(player.id.displayName)
+                            Image(player.avatar)
+                                .resizable()
+                                .frame(width:65, height:65)
+                                .aspectRatio(contentMode: .fit)
+                                .padding(.leading, 30)
+                        }
                     }
                 }
             }
@@ -60,7 +68,7 @@ struct LobbyView: View {
     func createInfectedPlayers() {
         mcManager.infectedPlayers.removeAll()
         for player in mcManager.gameParticipants {
-            mcManager.infectedPlayers.append(InfectedPlayer(id: player.id, name: player.id.displayName, isInfected: false))
+            mcManager.infectedPlayers.append(InfectedPlayer(id: player.id, name: player.id.displayName, isInfected: false, playerObject: SKSpriteNode(imageNamed: player.avatar)))
         }
         let randomIndex = Int.random(in: 0..<mcManager.infectedPlayers.count)
         mcManager.infectedPlayers[randomIndex].isInfected = true
