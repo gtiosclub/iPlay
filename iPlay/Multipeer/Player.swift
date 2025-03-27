@@ -9,7 +9,7 @@ import SwiftUI
 import Foundation
 import MultipeerConnectivity
 
-let avatars: Set = ["BarrelSprite", "BlenderSprite", "BottleSprite", "BowlSprite", "CeramicCupSprite", "FlaskSprite", "GasCanSprite", "GraterSprite", "KettleSprite", "MilkCartonSprite", "MugSprite", "PiperSprite", "PlantPotSprite", "SaltShakerSprite"]
+let avatars: Set<String> = ["BarrelSprite", "BlenderSprite", "BottleSprite", "BowlSprite", "CeramicCupSprite", "FlaskSprite", "GasCanSprite", "GraterSprite", "KettleSprite", "MilkCartonSprite", "MugSprite", "PiperSprite", "PlantPotSprite", "SaltShakerSprite"]
 
 struct Player: Hashable, Identifiable {
     //TODO: Add More Attributes: Avatar, ...
@@ -28,13 +28,13 @@ struct Player: Hashable, Identifiable {
     init(id: MCPeerID) {
         self.id = id
         self.username = id.displayName
-        self.avatar = "defaultAvatar"
+        self.avatar = avatars.randomElement()!
         self.points = 0
     }
     init(id: MCPeerID, username: String, avatar: String, points: Int) {
         self.id = id
         self.username = username
-        self.avatar = avatar
+        self.avatar = avatars.randomElement()!
         self.points = points
     }
 }
