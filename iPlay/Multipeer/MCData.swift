@@ -6,6 +6,10 @@
 //
 
 import Foundation
+import AVFoundation
+#if os(iOS)
+import UIKit
+#endif
 
 struct MCData: Codable {
     var id: String
@@ -115,4 +119,19 @@ struct MCData: Codable {
         case invalidID(message: String)
         case invalidData(message: String)
     }
+    
+#if os(iOS)
+    mutating func convertImageToData(ciImage: CIImage) {
+        let context = CIContext()
+            
+            guard let cgImage = context.createCGImage(ciImage, from: ciImage.extent) else {
+                print("Couldn't convert image")
+                return
+            }
+            
+            let uiImage = UIImage(cgImage: cgImage)
+            data = uiImage.jpegData(compressionQuality: 0.8) // Convert to JPEG
+    }
+#endif
 }
+
