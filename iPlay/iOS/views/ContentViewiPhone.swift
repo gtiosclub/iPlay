@@ -21,28 +21,20 @@ struct ContentViewiPhone: View {
                 case .scoreboard:
                     Text("Look at the scoreboard!")
                 case .preLobby:
-                    VStack {
-                        Text("Looking for lobbies...")
-                            .padding(.top, 25)
-                        List {
-                            ForEach(Array(mcManager.openLobbies)) { lobby in
-                                Section {
-                                    HStack {
-                                        Text("\(lobby.id.displayName)'s Lobby")
-                                        Button("Join") {
-                                            if let session = mcManager.session {
-                                                mcManager.browser.invitePeer(lobby.id, to: session, withContext: nil, timeout: 50)
-                                                print("Invited")
-                                            } else {
-                                                print("No session")
-                                            }
-                                        }
-                                    }
+                    let playerCount = (mcManager.session?.connectedPeers.count ?? 0) + 1
+                    
+                    PreLobby(
+                            openLobbies: Array(mcManager.openLobbies),
+                            playerCounter: playerCount,
+                            joinLobby: { lobby in
+                                if let session = mcManager.session {
+                                    mcManager.browser.invitePeer(lobby.id, to: session, withContext: nil, timeout: 50)
+                                    print("Invited")
+                                } else {
+                                    print("No session")
                                 }
                             }
-                        }
-                    }
-                    .background(.white)
+                        )
                 case .inLobby:
                     Text("Welcome to the lobby")
                     
