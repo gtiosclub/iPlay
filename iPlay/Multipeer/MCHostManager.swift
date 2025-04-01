@@ -5,10 +5,11 @@
 //  Created by Danny Byrd on 2/5/25.
 //
 
-#if os(macOS)
 import Foundation
 import MultipeerConnectivity
+#if os(macOS)
 import AppKit
+#endif
 
 enum SpectrumGameState: Codable {
     case instructions, whosPrompting, hintSubmitted, revealingGuesses, pointsAwarded, guessing
@@ -39,7 +40,9 @@ class MCHostManager: NSObject, ObservableObject {
     var spectrumPrompt: SpectrumPrompt?
     var spectrumGuesses = [PlayerGuess]()
     
+#if os(macOS)
     var emojiMatchImages: [MCPeerID : NSImage] = [:]
+    #endif
 
     init(name: String) {
         let peerID = MCPeerID(displayName: name)
@@ -156,9 +159,10 @@ extension MCHostManager: MCSessionDelegate {
                     print("NO Data recieved")
                     return
                 }
-                
+#if os(macOS)
                 let image = NSImage(data: data)
                 emojiMatchImages[peerID] = image
+#endif
             default:
                 print("Unhandled ID: \(mcData.id)")
             }
@@ -341,5 +345,3 @@ extension MCHostManager {
     }
     //Add other Multipeer Connectivity send functions here:
 }
-
-#endif
