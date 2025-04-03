@@ -40,6 +40,8 @@ class MCHostManager: NSObject, ObservableObject {
     var spectrumPrompt: SpectrumPrompt?
     var spectrumGuesses = [PlayerGuess]()
     
+    var chainLinks = [ChainLink]()
+    
 #if os(macOS)
     var emojiMatchImages: [MCPeerID : NSImage] = [:]
     #endif
@@ -94,6 +96,14 @@ class MCHostManager: NSObject, ObservableObject {
                 self.infectedPlayers[i].points += 1
             }
             
+        }
+    }
+    
+    func startChainTimer() {
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            self.secondsElapsed += 1.0
+            let guessTime = MCDataFloat(num: self.secondsElapsed)
+            self.sendChainTimer(guessTime)
         }
     }
     
@@ -153,6 +163,12 @@ extension MCHostManager: MCSessionDelegate {
                     //Do scoring
                     sendSpectrumState(.revealingGuesses)
                 }
+            case "chainWord":
+                let word = try mcData.decodeData(id: mcData.id, as: MCDataString.self)
+                print("Recieved word from: \(peerID.displayName): \(word.message)")
+                chainLinks.append(ChainLink(playerName: peerID.displayName, value: word.message))
+
+                
             //Add Additional Cases Here:
             case "emojiMatchImage":
                 guard let data = mcData.data else {
@@ -342,6 +358,20 @@ extension MCHostManager {
             print("Failed to send data: \(error.localizedDescription)")
         }
         
+    }
+    
+    func sendChainTimer(_ time: MCDataFloat) {
+        guard let session else {
+            print("Could not send chain timer, no session active")
+            return
+        }
+        do {
+            var mcData = MCData(id:"chainTimer")
+            try mcData.encodeData(id: "chainTimer", data: time)
+            let data = try JSONEncoder().encode(mcData)
+        } catch {
+            print("Failed to send data: \(error.localizedDescription)")
+        }
     }
     //Add other Multipeer Connectivity send functions here:
 }
