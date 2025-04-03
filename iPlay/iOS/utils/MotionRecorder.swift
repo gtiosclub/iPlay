@@ -11,7 +11,7 @@ import CoreMotion
 class MotionRecorder {
     let motionManager: CMMotionManager = CMMotionManager()
     var timer: Timer?
-    var dogFightPlayer: DogFightPlayer
+    var tilt: Double = 0.0
     
     init() {
         motionManager.deviceMotionUpdateInterval = 1.0 / 60.0
@@ -22,13 +22,7 @@ class MotionRecorder {
             motionManager.startDeviceMotionUpdates()
             timer = Timer(fire: Date(), interval: motionManager.deviceMotionUpdateInterval, repeats: true, block: { (timer) in
                 if let data = self.motionManager.deviceMotion {
-                    while (self.dogFightPlayer.lives != 0) {
-                        let x = data.attitude.pitch
-                        let y = data.attitude.roll
-                        let z = data.attitude.yaw
-                    }
-                    self.motionManager.stopDeviceMotionUpdates()
-                    timer.invalidate()
+                    self.tilt = data.attitude.roll
                 }
             })
             RunLoop.current.add(timer!, forMode: RunLoop.Mode.default)
