@@ -1,0 +1,19 @@
+{
+  "MLModelVersionStringKey" : "8.3.97",
+  "MLModelDescriptionKey" : "Ultralytics YOLOv10l model trained on \/kaggle\/input\/emotion-detection\/FullDataset\/data.yaml",
+  "MLModelCreatorDefinedKey" : {
+    "stride" : "32",
+    "com.github.apple.coremltools.source_dialect" : "TorchScript",
+    "com.github.apple.coremltools.source" : "torch==2.6.0",
+    "docs" : "https:\/\/docs.ultralytics.com",
+    "task" : "detect",
+    "com.github.apple.coremltools.version" : "8.2",
+    "date" : "2025-03-27T19:08:31.029101",
+    "imgsz" : "[640, 640]",
+    "batch" : "1",
+    "args" : "{'batch': 1, 'half': False, 'int8': False, 'nms': False}",
+    "names" : "{0: 'Anger', 1: 'Contempt', 2: 'Disgust', 3: 'Fear', 4: 'Happy', 5: 'Neutral', 6: 'Sad', 7: 'Surprised'}"
+  },
+  "MLModelAuthorKey" : "Ultralytics",
+  "MLModelLicenseKey" : "AGPL-3.0 License (https:\/\/ultralytics.com\/license)"
+}
