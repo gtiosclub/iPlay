@@ -38,7 +38,6 @@ struct ContentViewMac: View {
                             Text("Chain")
                         }
                         
-                    
                     default:
                         Color.blue
                     }

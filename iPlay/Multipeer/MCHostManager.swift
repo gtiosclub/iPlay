@@ -7,8 +7,9 @@
 
 import Foundation
 import MultipeerConnectivity
-
-
+#if os(macOS)
+import AppKit
+#endif
 
 enum SpectrumGameState: Codable {
     case instructions, whosPrompting, hintSubmitted, revealingGuesses, pointsAwarded, guessing
@@ -38,6 +39,10 @@ class MCHostManager: NSObject, ObservableObject {
     var spectrumGameState: SpectrumGameState = .instructions
     var spectrumPrompt: SpectrumPrompt?
     var spectrumGuesses = [PlayerGuess]()
+    
+#if os(macOS)
+    var emojiMatchImages: [MCPeerID : NSImage] = [:]
+    #endif
 
     init(name: String) {
         let peerID = MCPeerID(displayName: name)
@@ -149,6 +154,15 @@ extension MCHostManager: MCSessionDelegate {
                     sendSpectrumState(.revealingGuesses)
                 }
             //Add Additional Cases Here:
+            case "emojiMatchImage":
+                guard let data = mcData.data else {
+                    print("NO Data recieved")
+                    return
+                }
+#if os(macOS)
+                let image = NSImage(data: data)
+                emojiMatchImages[peerID] = image
+#endif
             default:
                 print("Unhandled ID: \(mcData.id)")
             }
