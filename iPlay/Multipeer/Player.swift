@@ -9,7 +9,7 @@ import SwiftUI
 import Foundation
 import MultipeerConnectivity
 
-let avatars: Set<String> = ["BarrelSprite", "BlenderSprite", "BottleSprite", "BowlSprite", "CeramicCupSprite", "FlaskSprite", "GasCanSprite", "GraterSprite", "KettleSprite", "MilkCartonSprite", "MugSprite", "PiperSprite", "PlantPotSprite", "SaltShakerSprite"]
+let avatars: [String] = ["BarrelSprite", "BlenderSprite", "BottleSprite", "BowlSprite", "CeramicCupSprite", "FlaskSprite", "GasCanSprite", "GraterSprite", "KettleSprite", "MilkCartonSprite", "MugSprite", "PiperSprite", "PlantPotSprite", "SaltShakerSprite"]
 
 struct Player: Hashable, Identifiable {
     //TODO: Add More Attributes: Avatar, ...
