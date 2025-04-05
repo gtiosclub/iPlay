@@ -44,7 +44,10 @@ struct ContentViewMac: View {
                     }
                 } else {
                     ZStack {
-                        Color.white.edgesIgnoringSafeArea(.all)
+                        Image("MacBackground")
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .edgesIgnoringSafeArea(.all)
                     VStack {
                         Image("MacHeader")
                             .resizable()
