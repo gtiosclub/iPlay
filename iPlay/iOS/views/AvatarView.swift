@@ -4,6 +4,7 @@
 //
 //  Created by Patrick Ying on 2/27/25.
 //
+#if os(iOS)
 import SwiftUI
 
 struct AvatarView: View {
@@ -74,3 +75,4 @@ struct AvatarPreview: View {
 #Preview {
     AvatarPreview()
 }
+#endif
