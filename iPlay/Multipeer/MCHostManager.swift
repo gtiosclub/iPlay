@@ -30,6 +30,7 @@ class MCHostManager: NSObject, ObservableObject {
     var numInfected: Int = 0
     var gameParticipants = Set<Player>()
     var infectedPlayers: [InfectedPlayer] = []
+    var dogFightPlayers: [DogFightPlayer] = []
     var secondsElapsed: Double = 0.0
     var timer: Timer?
     
