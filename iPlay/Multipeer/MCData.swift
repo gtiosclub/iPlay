@@ -6,6 +6,10 @@
 //
 
 import Foundation
+import AVFoundation
+#if os(iOS)
+import UIKit
+#endif
 
 struct MCData: Codable {
     var id: String
@@ -51,6 +55,18 @@ struct MCData: Codable {
             self.data = encodedData
         case "infectedState":
             let encodedData = try? JSONEncoder().encode(data as? MCInfectedState)
+            guard let encodedData = encodedData else {
+                throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
+            }
+            self.data = encodedData
+        case "chainWord":
+            let encodedData = try? JSONEncoder().encode(data as? MCDataString)
+            guard let encodedData = encodedData else {
+                throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
+            }
+            self.data = encodedData
+        case "chainTimer":
+            let encodedData = try? JSONEncoder().encode(data as? MCDataFloat)
             guard let encodedData = encodedData else {
                 throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
             }
@@ -107,6 +123,18 @@ struct MCData: Codable {
                 throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
             }
             return guess as! T
+        case "chainWord":
+            let chainWord = try JSONDecoder().decode(MCDataString.self, from: data)
+            guard chainWord is T else {
+                throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
+            }
+            return chainWord as! T
+        case "chainTimer":
+            let chainTimer = try JSONDecoder().decode(MCDataFloat.self, from: data)
+            guard chainTimer is T else {
+                throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
+            }
+            return chainTimer as! T
         default:
             throw MCDataError.invalidID(message: "\(id) is not supported for MCData")
         }
@@ -115,4 +143,19 @@ struct MCData: Codable {
         case invalidID(message: String)
         case invalidData(message: String)
     }
+    
+#if os(iOS)
+    mutating func convertImageToData(ciImage: CIImage) {
+        let context = CIContext()
+            
+            guard let cgImage = context.createCGImage(ciImage, from: ciImage.extent) else {
+                print("Couldn't convert image")
+                return
+            }
+            
+            let uiImage = UIImage(cgImage: cgImage)
+            data = uiImage.jpegData(compressionQuality: 0.8) // Convert to JPEG
+    }
+#endif
 }
+

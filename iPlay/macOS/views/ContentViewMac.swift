@@ -34,11 +34,11 @@ struct ContentViewMac: View {
                         
                         case .EmojiMatch:
                             Text("EmojiMatch")
+                            
                         case .Chain:
-                            Text("Chain")
+                            Chain(mcManager: mcManager)
                         }
                         
-                    
                     default:
                         Color.blue
                     }

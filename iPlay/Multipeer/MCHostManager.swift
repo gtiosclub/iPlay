@@ -7,8 +7,9 @@
 
 import Foundation
 import MultipeerConnectivity
-
-
+#if os(macOS)
+import AppKit
+#endif
 
 enum SpectrumGameState: Codable {
     case instructions, whosPrompting, hintSubmitted, revealingGuesses, pointsAwarded, guessing
@@ -38,6 +39,12 @@ class MCHostManager: NSObject, ObservableObject {
     var spectrumGameState: SpectrumGameState = .instructions
     var spectrumPrompt: SpectrumPrompt?
     var spectrumGuesses = [PlayerGuess]()
+    
+    var chainLinks = [ChainLink]()
+    
+#if os(macOS)
+    var emojiMatchImages: [MCPeerID : NSImage] = [:]
+    #endif
 
     init(name: String) {
         let peerID = MCPeerID(displayName: name)
@@ -89,6 +96,14 @@ class MCHostManager: NSObject, ObservableObject {
                 self.infectedPlayers[i].points += 1
             }
             
+        }
+    }
+    
+    func startChainTimer() {
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            self.secondsElapsed += 1.0
+            let guessTime = MCDataFloat(num: self.secondsElapsed)
+            self.sendChainTimer(guessTime)
         }
     }
     
@@ -148,7 +163,22 @@ extension MCHostManager: MCSessionDelegate {
                     //Do scoring
                     sendSpectrumState(.revealingGuesses)
                 }
+            case "chainWord":
+                let word = try mcData.decodeData(id: mcData.id, as: MCDataString.self)
+                print("Recieved word from: \(peerID.displayName): \(word.message)")
+                chainLinks.append(ChainLink(playerName: peerID.displayName, value: word.message))
+
+                
             //Add Additional Cases Here:
+            case "emojiMatchImage":
+                guard let data = mcData.data else {
+                    print("NO Data recieved")
+                    return
+                }
+#if os(macOS)
+                let image = NSImage(data: data)
+                emojiMatchImages[peerID] = image
+#endif
             default:
                 print("Unhandled ID: \(mcData.id)")
             }
@@ -328,6 +358,20 @@ extension MCHostManager {
             print("Failed to send data: \(error.localizedDescription)")
         }
         
+    }
+    
+    func sendChainTimer(_ time: MCDataFloat) {
+        guard let session else {
+            print("Could not send chain timer, no session active")
+            return
+        }
+        do {
+            var mcData = MCData(id:"chainTimer")
+            try mcData.encodeData(id: "chainTimer", data: time)
+            let data = try JSONEncoder().encode(mcData)
+        } catch {
+            print("Failed to send data: \(error.localizedDescription)")
+        }
     }
     //Add other Multipeer Connectivity send functions here:
 }

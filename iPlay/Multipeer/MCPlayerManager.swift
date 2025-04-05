@@ -248,5 +248,27 @@ extension MCPlayerManager {
         }
     }
     
+    func submitChainWord(_ word: String) {
+        guard let session else {
+            print("Session is nil")
+            return
+        }
+        
+        guard let host else {
+            print("No host in session")
+            return
+        }
+        
+        var mcWordData = MCData(id: "chainWord")
+        do {
+            try mcWordData.encodeData(id: "chainWord", data: mcWordData)
+            let encodedWord = try JSONEncoder().encode(mcWordData)
+            print("HOST: \(host.displayName)")
+            try session.send(encodedWord, toPeers: [host], with: .reliable)
+        } catch {
+            print("Failed to submit guess: \(error.localizedDescription)")
+        }
+    }
+    
     // Add other Multipeer Connectivity send functions here:
 }
