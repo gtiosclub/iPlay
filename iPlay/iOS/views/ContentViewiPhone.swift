@@ -29,8 +29,15 @@ struct ContentViewiPhone: View {
                             playerCounter: playerCount,
                             joinLobby: { lobby in
                                 if let session = mcManager.session {
-                                    mcManager.browser.invitePeer(lobby.id, to: session, withContext: nil, timeout: 50)
-                                    print("Invited")
+                                    
+                                    if let context = try? JSONEncoder().encode(avatar) {
+                                        mcManager.browser.invitePeer(lobby.id, to: session, withContext: context, timeout: 50)
+                                        print("Invited")
+                                    }
+                                    else {
+                                        print("Failed to encode avatar!")
+                                    }
+                                    
                                 } else {
                                     print("No session")
                                 }
@@ -134,21 +141,6 @@ struct ContentViewiPhone: View {
                     }
                     .disabled(username.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     
-//                    Button(action: {
-//                        isNavigating = true
-//                    }) {
-//                        Text("Customize Avatar")
-//                            .font(.title2)
-//                            .foregroundColor(.black) // Text color
-//                            .frame(width: 240, height: 60) // Size of button
-//                            .background(
-//                                RoundedRectangle(cornerRadius: 30).stroke( Color.black,lineWidth:3).fill()
-//                            ) // Button background color
-//                            
-//                    }
-//                    .navigationDestination(isPresented:$isNavigating){
-//                        AvatarView()
-//                    }
                     NavigationLink( destination: AvatarView(username: $username, avatar: $avatar)
                         .navigationBarBackButtonHidden(true),
                         label: {

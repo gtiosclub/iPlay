@@ -25,12 +25,21 @@ struct Player: Hashable, Identifiable {
     static func ==(a: Player, b: Player) -> Bool {
         a.id == b.id
     }
+    
     init(id: MCPeerID) {
         self.id = id
         self.username = id.displayName
         self.avatar = avatars.randomElement()!
         self.points = 0
     }
+    
+    init(id: MCPeerID, avatar: String) {
+        self.id = id
+        self.username = id.displayName
+        self.avatar = avatar
+        self.points = 0
+    }
+    
     init(id: MCPeerID, username: String, avatar: String, points: Int) {
         self.id = id
         self.username = username

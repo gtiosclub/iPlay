@@ -204,8 +204,16 @@ extension MCHostManager: MCSessionDelegate {
 extension MCHostManager: MCNearbyServiceAdvertiserDelegate {
     func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
         
+        var avatar = "DefaultAvatar"
+        if let context = context {
+            do {
+                avatar = try JSONDecoder().decode(String.self, from: context)
+            } catch {
+                print("Failed to decode avatar from context: \(error)")
+            }
+        }
         //Accepts the invitation request
-        gameParticipants.insert(Player(id: peerID))
+        gameParticipants.insert(Player(id: peerID, avatar: avatar))
         invitationHandler(true, session)
     }
 }
