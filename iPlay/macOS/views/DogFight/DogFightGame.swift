@@ -5,18 +5,20 @@
 //  Created by Ryan O’Meara on 3/25/25.
 //
 
-#if os(macOS)
+//#if os(macOS)
 import SpriteKit
 
 class DogFightGame: SKScene {
     override func didMove(to: SKView) {
         //Add background
+        #if os(macOS)
         let texture = SKTexture(image: NSImage(named: "DogFightBackground")!)
         let background = SKSpriteNode(texture: texture)
         background.position = CGPoint(x: size.width / 2, y: size.height / 2)
         background.zPosition = -1
         background.size = self.size
         addChild(background)
+        #endif
         
         generateDogFightPlayerNodes()
         
@@ -24,26 +26,46 @@ class DogFightGame: SKScene {
     }
     
     override func update(_ currentTime: TimeInterval) {
-        
+        print("UPDATING")
+        for player in MCHostManager.shared!.dogFightPlayers {
+            player.playerObject.position.x += player.heading.x * player.vectorMagnitude / 60
+            player.playerObject.position.y += player.heading.y * player.vectorMagnitude / 60
+            print("moving player: dx \(player.heading.x * player.vectorMagnitude / 60), dy \(player.heading.y * player.vectorMagnitude / 60)")
+            print("heading: \(player.heading)")
+        }
     }
     
     func generateDogFightPlayerNodes() {
         let spawnPoints: [CGPoint] = generateSpawnPoints(MCHostManager.shared!.dogFightPlayers.count)
 
         for i in MCHostManager.shared!.dogFightPlayers.indices {
-            let player = MCHostManager.shared!.dogFightPlayers[i]
-            player.playerObject.position = spawnPoints[i]
-            player.playerObject.size = CGSize(width: 103, height: 41)
-
+            let playerObject = MCHostManager.shared!.dogFightPlayers[i].playerObject
+            playerObject.position = spawnPoints[i]
+            playerObject.size = CGSize(width: 103, height: 41)
+            
+            //Update heading
+            let dx = (size.width / 2)  - playerObject.position.x
+            let dy = (size.height / 2) - playerObject.position.y
+            var length = sqrt(dx*dx + dy*dy)
+            if  length == 0 {
+                length = 1
+            }
+            let heading = Vector(x: dx / length, y: dy / length)
+            
+            //Make playernode rotate to match heading
+            playerObject.zRotation = atan2(heading.x, heading.y) + .pi// add radian because sprites defualt point right
+            MCHostManager.shared!.dogFightPlayers[i].heading = heading
             //Physics bodies set up for collision
-            player.playerObject.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: 80, height: 30))
-            player.playerObject.physicsBody?.affectedByGravity = false
-            player.playerObject.physicsBody?.isDynamic = true
-            player.playerObject.physicsBody?.allowsRotation = false
-            player.playerObject.physicsBody?.collisionBitMask = 0x1
-            addChild(player.playerObject)
+            playerObject.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: 80, height: 30))
+            playerObject.physicsBody?.affectedByGravity = false
+            playerObject.physicsBody?.isDynamic = true
+            playerObject.physicsBody?.allowsRotation = false
+            playerObject.physicsBody?.collisionBitMask = 0x1
+            
+            addChild(playerObject)
             
         }
+        print("players full: \(MCHostManager.shared!.dogFightPlayers)")
     }
     
     func generateSpawnPoints(_ numPlayers: Int) -> [CGPoint] {
@@ -73,4 +95,4 @@ class DogFightGame: SKScene {
         return spawnPoints
     }
 }
-#endif
+//#endif
