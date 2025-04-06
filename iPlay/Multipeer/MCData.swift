@@ -29,6 +29,12 @@ struct MCData: Codable {
                 throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
             }
             self.data = encodedData
+        case "dogFightVector":
+            let encodedData = try? JSONEncoder().encode(data as? MCDataFloat)
+            guard let encodedData = encodedData else {
+                throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
+            }
+            self.data = encodedData
         case "spectrumHintFromPrompter":
             let encodedData = try? JSONEncoder().encode(data as? MCDataString)
             guard let encodedData = encodedData else {
@@ -91,6 +97,12 @@ struct MCData: Codable {
             let decodedData = try JSONDecoder().decode(Vector.self, from: data)
             guard decodedData is T else {
                 throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
+            }
+            return decodedData as! T
+        case "dogFightVector":
+            let decodedData = try JSONDecoder().decode(MCDataFloat.self, from: data)
+            guard decodedData is T else {
+                throw MCDataError.invalidID(message: "The ID provided does not correspond to the provided data type")
             }
             return decodedData as! T
         case "spectrumHintFromPrompter":

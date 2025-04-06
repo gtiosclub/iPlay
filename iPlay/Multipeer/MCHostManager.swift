@@ -30,6 +30,7 @@ class MCHostManager: NSObject, ObservableObject {
     var numInfected: Int = 0
     var gameParticipants = Set<Player>()
     var infectedPlayers: [InfectedPlayer] = []
+    var dogFightPlayers: [DogFightPlayer] = []
     var secondsElapsed: Double = 0.0
     var timer: Timer?
     
@@ -150,6 +151,12 @@ extension MCHostManager: MCSessionDelegate {
             case "infectedVector":
                 let vector_data = try mcData.decodeData(id: mcData.id, as: Vector.self)
                 infectedPlayers.first(where: {$0.id.displayName == peerID.displayName})?.move(by: vector_data)
+            case "dogFightVector":
+                let angle_data = try mcData.decodeData(id: mcData.id, as: MCDataFloat.self)
+                if let index = dogFightPlayers.firstIndex(where: { $0.id.displayName == peerID.displayName }) {
+                    dogFightPlayers[index].updateHeading(by: angle_data)
+                }
+                
             case "spectrumHintFromPrompter":
                 let prompt = try mcData.decodeData(id: mcData.id, as: MCDataString.self)
                 print("Recieved hint: \(prompt.message)")
