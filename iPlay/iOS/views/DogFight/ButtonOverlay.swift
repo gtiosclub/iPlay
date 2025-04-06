@@ -17,21 +17,42 @@ struct ButtonOverlay: View {
                 .resizable()
                 .scaledToFit()
                 .frame(width: 260, height: 260)
-            Image(isPressed ? "pressedDogFightButton" : "unpressedDogFightButton")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 200, height: 200)
-                .offset(y: 2)
-                .gesture(
-                    DragGesture(minimumDistance: 0)
-                        .onChanged { _ in
-                            isPressed = true
-                        }
-                        .onEnded { _ in
-                            isPressed = false
-                            onPress()
-                        }
-                )
+            Button(action: {
+                isPressed = true
+                onPress()
+                DispatchQueue.main.asyncAfter(deadline:.now() + 2)
+                {isPressed = false}
+            }, label: {
+                Image(isPressed ? "pressedDogFightButton" : "unpressedDogFightButton")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 200, height: 200)
+                    .offset(y: 2)
+            })
+            .disabled(isPressed)
+            .buttonStyle(PlainButtonStyle())
+            
+//            Image(isPressed ? "pressedDogFightButton" : "unpressedDogFightButton")
+//                .resizable()
+//                .scaledToFit()
+//                .frame(width: 200, height: 200)
+//                .offset(y: 2)
+//                .gesture(
+//                    DragGesture(minimumDistance: 0)
+//                        .onChanged { _ in
+//                            if !isCoolingDown {
+//                                isPressed = true
+//                            }
+//                        }
+//                        .onEnded { _ in
+//                            isCoolingDown = true
+//                            onPress()
+//                            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+//                                isPressed = false
+//                                isCoolingDown = false
+//                            }
+//                        }
+//                )
         }
     }
 }

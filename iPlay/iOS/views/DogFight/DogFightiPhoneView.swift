@@ -13,6 +13,7 @@ struct DogFightiPhoneView: View {
     @State private var wasHit = false
     @State private var tookDamage = false
     @StateObject private var motionRecorder = MotionRecorder()
+    @State private var hasBall = true
     
 
     let countdownInterval = 1.0
@@ -37,23 +38,23 @@ struct DogFightiPhoneView: View {
             } else {
                 
                 VStack {
-//                    Spacer()
+                    Spacer()
                     Text("Tilt your phone to move your place! \n Press the button to shoot a paper ball!")
                         .bold()
                         .padding(.bottom, 60)
                         .font(.system(size: 20))
                         .multilineTextAlignment(.center)
                     ButtonOverlay(onPress: {
-                        loseLife()
+                        MCPlayerManager.shared!.shootBall()
                     })
                         .padding(.bottom, 20)
                     Image("BlenderSprite")
                         .resizable()
                         .scaledToFit()
                         .frame(width: 110, height: 200)
-//                        .padding(.bottom, 60)
-                    Text(String(format: "Tilt: %.2f", motionRecorder.tilt))
-                        .foregroundColor(.white)
+                        .padding(.bottom, 60)
+//                    Text(String(format: "Tilt: %.2f", motionRecorder.tilt))
+//                        .foregroundColor(.white)
                 }
             }
             
