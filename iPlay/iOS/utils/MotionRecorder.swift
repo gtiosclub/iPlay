@@ -8,27 +8,31 @@
 #if os(iOS)
 import CoreMotion
 
-class MotionRecorder {
+class MotionRecorder: ObservableObject {
     let motionManager: CMMotionManager = CMMotionManager()
     var timer: Timer?
-    var tilt: Double = 0.0
-    
-    init() {
-        motionManager.deviceMotionUpdateInterval = 1.0 / 60.0
-    }
+    @Published var tilt: Double = 0.0
     
     func startFetchingMotionData() {
+        motionManager.deviceMotionUpdateInterval = 0.1 //change interval if needed
         if motionManager.isDeviceMotionAvailable {
             motionManager.startDeviceMotionUpdates()
-            timer = Timer(fire: Date(), interval: motionManager.deviceMotionUpdateInterval, repeats: true, block: { (timer) in
+            timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
                 if let data = self.motionManager.deviceMotion {
-                    self.tilt = data.attitude.roll
+                    DispatchQueue.main.async {
+                        self.tilt = data.attitude.roll
+                    }
                 }
-            })
-            RunLoop.current.add(timer!, forMode: RunLoop.Mode.default)
+            }
         } else {
             print("Device motion is unavailable.")
         }
     }
+    
+    deinit {
+        timer?.invalidate()
+        motionManager.stopDeviceMotionUpdates()
+    }
+    
 }
 #endif

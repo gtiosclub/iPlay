@@ -26,12 +26,10 @@ class DogFightGame: SKScene {
     }
     
     override func update(_ currentTime: TimeInterval) {
-        print("UPDATING")
+        //Move players in direction of heading
         for player in MCHostManager.shared!.dogFightPlayers {
             player.playerObject.position.x += player.heading.x * player.vectorMagnitude / 60
             player.playerObject.position.y += player.heading.y * player.vectorMagnitude / 60
-            print("moving player: dx \(player.heading.x * player.vectorMagnitude / 60), dy \(player.heading.y * player.vectorMagnitude / 60)")
-            print("heading: \(player.heading)")
         }
     }
     
@@ -65,7 +63,6 @@ class DogFightGame: SKScene {
             addChild(playerObject)
             
         }
-        print("players full: \(MCHostManager.shared!.dogFightPlayers)")
     }
     
     func generateSpawnPoints(_ numPlayers: Int) -> [CGPoint] {

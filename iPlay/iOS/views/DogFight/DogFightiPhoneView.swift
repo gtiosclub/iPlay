@@ -4,7 +4,7 @@
 //
 //  Created by Ryan O’Meara on 3/25/25.
 //
-
+#if os(iOS)
 import SwiftUI
 
 struct DogFightiPhoneView: View {
@@ -12,6 +12,8 @@ struct DogFightiPhoneView: View {
     @State private var showCountdown = true
     @State private var wasHit = false
     @State private var tookDamage = false
+    @StateObject private var motionRecorder = MotionRecorder()
+    
 
     let countdownInterval = 1.0
     
@@ -29,11 +31,12 @@ struct DogFightiPhoneView: View {
                     .frame(width: 200, height: 200)
                     .onAppear {
                         startCountdown()
+                        motionRecorder.startFetchingMotionData()
                     }
             } else {
                 
                 VStack {
-                    Spacer()
+//                    Spacer()
                     Text("Tilt your phone to move your place! \n Press the button to shoot a paper ball!")
                         .bold()
                         .padding(.bottom, 60)
@@ -47,7 +50,9 @@ struct DogFightiPhoneView: View {
                         .resizable()
                         .scaledToFit()
                         .frame(width: 110, height: 200)
-                        .padding(.bottom, 60)
+//                        .padding(.bottom, 60)
+                    Text(String(format: "Tilt: %.2f", motionRecorder.tilt))
+                        .foregroundColor(.white)
                 }
             }
             
@@ -89,3 +94,4 @@ struct DogFightiPhoneView: View {
 #Preview {
     DogFightiPhoneView()
 }
+#endif
