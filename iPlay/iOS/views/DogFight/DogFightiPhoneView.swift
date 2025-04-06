@@ -32,6 +32,7 @@ struct DogFightiPhoneView: View {
                     .onAppear {
                         startCountdown()
                         motionRecorder.startFetchingMotionData()
+                        startSendingAngle()
                     }
             } else {
                 
@@ -76,6 +77,14 @@ struct DogFightiPhoneView: View {
                 }
             }
         }
+    }
+    
+    func startSendingAngle() {
+        let sendAngleTimer = Timer.scheduledTimer(withTimeInterval: 0.01, repeats: true) {_ in
+            let angle = max(-Double.pi / 2, min(Double.pi / 2, motionRecorder.tilt))
+            MCPlayerManager.shared?.sendAngle(angle: angle)
+        }
+        RunLoop.current.add(sendAngleTimer, forMode: .default)
     }
     
     func loseLife() {

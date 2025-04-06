@@ -28,9 +28,35 @@ class DogFightGame: SKScene {
     override func update(_ currentTime: TimeInterval) {
         //Move players in direction of heading
         for player in MCHostManager.shared!.dogFightPlayers {
-            player.playerObject.position.x += player.heading.x * player.vectorMagnitude / 60
-            player.playerObject.position.y += player.heading.y * player.vectorMagnitude / 60
+//            player.playerObject.position.x += player.heading.x * player.vectorMagnitude / 60
+//            player.playerObject.position.y += player.heading.y * player.vectorMagnitude / 60
+//            player.playerObject.zRotation = atan2(player.heading.y, player.heading.x)
+            // Smoothly interpolate between current heading and desired heading
+                    let currentHeading = player.playerObject.zRotation
+                    let targetHeading = atan2(player.heading.y, player.heading.x)
+                    
+                    // Interpolate angle with easing (adjust factor for smoothness)
+                    let interpolationFactor: CGFloat = 0.1
+                    let smoothedHeading = interpolateAngle(from: currentHeading, to: targetHeading, factor: interpolationFactor)
+                    
+                    player.playerObject.zRotation = smoothedHeading
+
+                    // Move in direction of current zRotation (based on smooth heading)
+                    let dx = CGFloat(cos(Double(smoothedHeading))) * player.vectorMagnitude / 60
+                    let dy = CGFloat(sin(Double(smoothedHeading))) * player.vectorMagnitude / 60
+                    player.playerObject.position.x += dx
+                    player.playerObject.position.y += dy
         }
+    }
+    
+    func interpolateAngle(from: CGFloat, to: CGFloat, factor: CGFloat) -> CGFloat {
+        var delta = to - from
+        if delta > .pi {
+            delta -= 2 * .pi
+        } else if delta < -.pi {
+            delta += 2 * .pi
+        }
+        return from + delta * factor
     }
     
     func generateDogFightPlayerNodes() {
@@ -51,7 +77,7 @@ class DogFightGame: SKScene {
             let heading = Vector(x: dx / length, y: dy / length)
             
             //Make playernode rotate to match heading
-            playerObject.zRotation = atan2(heading.x, heading.y) + .pi// add radian because sprites defualt point right
+            playerObject.zRotation = atan2(heading.y, heading.x)
             MCHostManager.shared!.dogFightPlayers[i].heading = heading
             //Physics bodies set up for collision
             playerObject.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: 80, height: 30))

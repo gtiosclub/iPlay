@@ -16,16 +16,20 @@ struct DogFightPlayer: Hashable, Identifiable {
     var hasBall: Bool = true
     var lives: Int = 3
     var playerObject: SKSpriteNode
-    let vectorMagnitude: Double = 20.0 //Constant velocity that planes fly, they only change direction for now
+    let vectorMagnitude: Double = 50.0 //Constant velocity that planes fly, they only change direction for now
     var heading: Vector = Vector(x:0,y:1) //Normalized vector where plane is currently pointing (magnitude should be 1)
-    var avatar: String 
+    var avatar: String
+    let turnSpeed: Double = 1.0
     
     //TO-DO: create function to update heading vectors
     
-    func move() {
-        let x = heading.x
-        let y = -heading.y
-        playerObject.run(SKAction.moveBy(x: x, y: y, duration: 1))
+    mutating func updateHeading(by inputAngle: MCDataFloat) {
+        //Input heading from gyro should be in range - 1/2 pi to 1/2 pi,
+        let turnAngle = inputAngle.num * turnSpeed / 60.0
+        let angleHeading = atan2(heading.y, heading.x)
+        let newHeading = angleHeading + turnAngle
+        heading = Vector(x: cos(newHeading), y: sin(newHeading))
+
     }
 
 }

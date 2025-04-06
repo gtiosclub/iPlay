@@ -201,6 +201,22 @@ extension MCPlayerManager {
         }
     }
     
+    func sendAngle(angle: Double) {
+        guard let session else {
+            print("Session is nil")
+            return
+        }
+        var mcData = MCData(id: "dogFightVector")
+        do {
+            try mcData.encodeData(id: mcData.id, data: MCDataFloat(num:angle))
+            let data = try JSONEncoder().encode(mcData)
+            try session.send(data, toPeers: session.connectedPeers, with: .reliable)
+        } catch {
+            print(error)
+            return
+        }
+    }
+    
     //Spectrum: Sends the prompt to host, which then sends to other players
     func sendHint(_ prompt: String) {
         guard let session else {
