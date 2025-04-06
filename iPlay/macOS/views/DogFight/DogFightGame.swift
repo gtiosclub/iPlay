@@ -28,24 +28,33 @@ class DogFightGame: SKScene {
     override func update(_ currentTime: TimeInterval) {
         //Move players in direction of heading
         for player in MCHostManager.shared!.dogFightPlayers {
-//            player.playerObject.position.x += player.heading.x * player.vectorMagnitude / 60
-//            player.playerObject.position.y += player.heading.y * player.vectorMagnitude / 60
-//            player.playerObject.zRotation = atan2(player.heading.y, player.heading.x)
             // Smoothly interpolate between current heading and desired heading
-                    let currentHeading = player.playerObject.zRotation
-                    let targetHeading = atan2(player.heading.y, player.heading.x)
-                    
-                    // Interpolate angle with easing (adjust factor for smoothness)
-                    let interpolationFactor: CGFloat = 0.1
-                    let smoothedHeading = interpolateAngle(from: currentHeading, to: targetHeading, factor: interpolationFactor)
-                    
-                    player.playerObject.zRotation = smoothedHeading
+            let currentHeading = player.playerObject.zRotation
+            let targetHeading = atan2(player.heading.y, player.heading.x)
+            
+            let interpolationFactor: CGFloat = 0.1  // Interpolate angle with easing (adjust factor for smoothness)
+            let smoothedHeading = interpolateAngle(from: currentHeading, to: targetHeading, factor: interpolationFactor)
+            
+            player.playerObject.zRotation = smoothedHeading
 
-                    // Move in direction of current zRotation (based on smooth heading)
-                    let dx = CGFloat(cos(Double(smoothedHeading))) * player.vectorMagnitude / 60
-                    let dy = CGFloat(sin(Double(smoothedHeading))) * player.vectorMagnitude / 60
-                    player.playerObject.position.x += dx
-                    player.playerObject.position.y += dy
+            // Move in direction of current zRotation (based on smooth heading)
+            let dx = CGFloat(cos(Double(smoothedHeading))) * player.vectorMagnitude / 60
+            let dy = CGFloat(sin(Double(smoothedHeading))) * player.vectorMagnitude / 60
+            player.playerObject.position.x += dx
+            player.playerObject.position.y += dy
+        }
+        print("Balls: \(MCHostManager.shared!.dogFightBalls)")
+        for i in MCHostManager.shared!.dogFightBalls.indices {
+            let ball = MCHostManager.shared!.dogFightBalls[i]
+            
+            if ball.sprite == nil { //new ball, need to create sprite
+//                print("BEFORE ball.sprite: \(ball.sprite ?? SKSpriteNode())")
+                MCHostManager.shared!.dogFightBalls[i].sprite = spawnBall(ball: ball)
+//                print("AFTER  ball.sprite: \(ball.sprite ?? SKSpriteNode())")
+            } else {
+                MCHostManager.shared!.dogFightBalls[i].sprite!.position.x += ball.velocity.dx / 60
+                MCHostManager.shared!.dogFightBalls[i].sprite!.position.y += ball.velocity.dy / 60
+            }
         }
     }
     
@@ -57,6 +66,20 @@ class DogFightGame: SKScene {
             delta += 2 * .pi
         }
         return from + delta * factor
+    }
+    
+    func spawnBall(ball: DogFightBall) -> SKSpriteNode {
+        let ballSprite = SKSpriteNode(imageNamed: "PaperBall")
+        ballSprite.size = CGSize(width:60, height: 57)
+        ballSprite.position = ball.position
+
+        ballSprite.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: 30, height: 30))
+        ballSprite.physicsBody?.affectedByGravity = false
+        ballSprite.physicsBody?.isDynamic = true
+        ballSprite.physicsBody?.allowsRotation = false
+        ballSprite.physicsBody?.collisionBitMask = 0x2
+        addChild(ballSprite)
+        return ballSprite
     }
     
     func generateDogFightPlayerNodes() {
@@ -117,5 +140,9 @@ class DogFightGame: SKScene {
         }
         return spawnPoints
     }
+    
+    func shootBall() {
+        
+    }
 }
-//#endif
+
