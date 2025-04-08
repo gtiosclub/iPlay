@@ -54,7 +54,7 @@ struct ContentViewiPhone: View {
                     case .DogFight:
                         DogFightiPhoneView()
                     case .Chain:
-                        Text("Insert chain view here")
+                        ChainiPhoneView()
                     case .EmojiMatch:
                         Text("insert emoji match view here")
                     case .Spectrum:
