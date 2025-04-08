@@ -77,6 +77,12 @@ struct MCData: Codable {
                 throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
             }
             self.data = encodedData
+        case "chainLinks":
+            let encodedData = try? JSONEncoder().encode(data as? [ChainLink])
+            guard let encodedData = encodedData else {
+                throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
+            }
+            self.data = encodedData
         default:
             throw MCDataError.invalidID(message: "\(id) is not supported for MCData")
         }
@@ -147,6 +153,12 @@ struct MCData: Codable {
                 throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
             }
             return chainTimer as! T
+        case "chainLinks":
+            let chainLinks = try JSONDecoder().decode([ChainLink].self, from: data)
+            guard chainLinks is T else {
+                throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
+            }
+            return chainLinks as! T
         default:
             throw MCDataError.invalidID(message: "\(id) is not supported for MCData")
         }

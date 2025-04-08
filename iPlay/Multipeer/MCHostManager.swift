@@ -44,7 +44,8 @@ class MCHostManager: NSObject, ObservableObject {
     var spectrumPrompt: SpectrumPrompt?
     var spectrumGuesses = [PlayerGuess]()
     
-    var chainLinks = [ChainLink]()
+//    var chainLinks = [ChainLink]()
+    var playerChains: [String: [ChainLink]] = [:]
     
 #if os(macOS)
     var emojiMatchImages: [MCPeerID : NSImage] = [:]
@@ -184,11 +185,17 @@ extension MCHostManager: MCSessionDelegate {
                     //Do scoring
                     sendSpectrumState(.revealingGuesses)
                 }
-            case "chainWord":
-                let word = try mcData.decodeData(id: mcData.id, as: MCDataString.self)
-                print("Recieved word from: \(peerID.displayName): \(word.message)")
-                chainLinks.append(ChainLink(playerName: peerID.displayName, value: word.message))
-
+            case "chainLinks":
+                let links = try mcData.decodeData(id: mcData.id, as: [ChainLink].self)
+                
+                // Store this player's chain
+                if links.count > 0 {
+                    let playerName = peerID.displayName
+                    playerChains[playerName] = links
+                    
+                    // Print the updated chain
+                    printPlayerChain(playerName)
+                }
                 
             //Add Additional Cases Here:
             case "emojiMatchImage":
@@ -207,6 +214,25 @@ extension MCHostManager: MCSessionDelegate {
         } catch {
             print("Error decoding: \(error)")
         }
+    }
+    
+    func printPlayerChain(_ playerName: String) {
+        guard let chain = playerChains[playerName] else {
+            print("No chain found for player: \(playerName)")
+            return
+        }
+        
+        let chainString = chain.map { $0.value }.joined(separator: " → ")
+        print("\(playerName): \(chainString)")
+    }
+
+    func printAllChains() {
+        print("--- Current Chain Status ---")
+        for (playerName, chain) in playerChains {
+            let chainString = chain.map { $0.value }.joined(separator: " → ")
+            print("\(playerName): \(chainString)")
+        }
+        print("---------------------------")
     }
     
     func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {
@@ -402,5 +428,11 @@ extension MCHostManager {
             print("Failed to send data: \(error.localizedDescription)")
         }
     }
-    //Add other Multipeer Connectivity send functions here:
+    
+    func getAllChainStrings() -> [String] {
+        return playerChains.map { playerName, chain in
+            let chainString = chain.map { $0.value }.joined(separator: " → ")
+            return "\(playerName): \(chainString)"
+        }
+    }
 }
