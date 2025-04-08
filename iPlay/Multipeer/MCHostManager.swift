@@ -44,12 +44,7 @@ class MCHostManager: NSObject, ObservableObject {
     var spectrumPrompt: SpectrumPrompt?
     var spectrumGuesses = [PlayerGuess]()
     
-    var chainLinks = [ChainLink]() {
-        didSet {
-            print("chainLinks updated!")
-            // Or fire off any logic needed here directly
-        }
-    }
+    var chainPlayers: [ChainPlayer] = []
     var endWord: String? = nil
     
 #if os(macOS)
@@ -139,39 +134,39 @@ class MCHostManager: NSObject, ObservableObject {
     }
     
     //*********  CHAIN  *********//
-    
-    func getChainString(_ links: [ChainLink]) -> String {
-        return links.map { $0.value }.joined(separator: " → ")
-    }
-    
-    func getLatestChain() -> String {
-        return getChainString(chainLinks)
-    }
-
-    func getChainsByPlayer() -> [String: [ChainLink]] {
-        var chainsByPlayer: [String: [ChainLink]] = [:]
-        
-        for link in chainLinks {
-            if chainsByPlayer[link.playerName] == nil {
-                chainsByPlayer[link.playerName] = [link]
-            } else {
-                chainsByPlayer[link.playerName]?.append(link)
-            }
+    func getChainsByPlayer() -> [String: [String]] {
+        var chainsByPlayer: [String: [String]] = [:]
+        for player in chainPlayers {
+            chainsByPlayer[player.name] = player.chain
         }
-        
         return chainsByPlayer
     }
 
-    func printAllChains() {
-        let chainsByPlayer = getChainsByPlayer()
-        
-        print("--- Current Chain Status ---")
-        for (player, links) in chainsByPlayer {
-            let chainString = links.map { $0.value }.joined(separator: " → ")
-            print("\(player): \(chainString)")
-        }
-        print("---------------------------")
+    func getLatestChain() -> String {
+        return chainPlayers.flatMap { $0.chain }.joined(separator: " → ")
     }
+    
+    func getChainLinksByPlayer() -> [String: [ChainLink]] {
+        var result: [String: [ChainLink]] = [:]
+        for player in chainPlayers {
+            result[player.name] = player.chain.map { ChainLink(playerName: player.name, value: $0) }
+        }
+        return result
+    }
+
+    func applyChainPointsToGameParticipants() {
+        var updatedPlayers = gameParticipants
+        for chainPlayer in chainPlayers {
+            if let player = gameParticipants.first(where: { $0.id == chainPlayer.id }) {
+                var updatedPlayer = player
+                updatedPlayer.points += chainPlayer.points
+                updatedPlayers.remove(player)
+                updatedPlayers.insert(updatedPlayer)
+            }
+        }
+        gameParticipants = updatedPlayers
+    }
+
     
     func startChainTimer() {
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
@@ -234,12 +229,29 @@ extension MCHostManager: MCSessionDelegate {
                 }
             case "chainWord":
                 let word = try mcData.decodeData(id: mcData.id, as: MCDataString.self)
-                print("Recieved word from: \(peerID.displayName): \(word.message)")
-                chainLinks.append(ChainLink(playerName: peerID.displayName, value: word.message))
+                print("Received word from: \(peerID.displayName): \(word.message)")
+                
+                if let index = chainPlayers.firstIndex(where: { $0.id == peerID }) {
+                    chainPlayers[index].chain.append(word.message)
+                    chainPlayers[index].points = chainPlayers[index].chain.count
+                } else {
+                    let newPlayer = ChainPlayer(id: peerID, name: peerID.displayName, points: 1, chain: [word.message])
+                    chainPlayers.append(newPlayer)
+                }
+
             case "chainLinks":
                 let links = try mcData.decodeData(id: mcData.id, as: [ChainLink].self)
-                print("Received chain from \(peerID.displayName): \(getChainString(links))")
-                chainLinks = links
+                let words = links.map { $0.value }
+                print("Received chain from \(peerID.displayName): \(words.joined(separator: " → "))")
+                
+                if let index = chainPlayers.firstIndex(where: { $0.id == peerID }) {
+                    chainPlayers[index].chain = words
+                    chainPlayers[index].points = words.count
+                } else {
+                    let newPlayer = ChainPlayer(id: peerID, name: peerID.displayName, points: words.count, chain: words)
+                    chainPlayers.append(newPlayer)
+                }
+
                 
             //Add Additional Cases Here:
             case "emojiMatchImage":

@@ -122,8 +122,6 @@ struct ContentViewMac: View {
                 }
             }
             .preferredColorScheme(.light)
-        
-        
     }
 }
 

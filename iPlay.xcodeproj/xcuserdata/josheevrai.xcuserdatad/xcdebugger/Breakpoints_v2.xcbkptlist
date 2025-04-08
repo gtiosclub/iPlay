@@ -14,9 +14,9 @@
             filePath = "iPlay/Multipeer/MCHostManager.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "90"
-            endingLineNumber = "90"
-            landmarkName = "initializeScores()"
+            startingLineNumber = "85"
+            endingLineNumber = "85"
+            landmarkName = "startInfectedGame()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
