@@ -7,6 +7,9 @@
 
 import SwiftUI
 import CoreML
+#if os(iOS)
+import UIKit
+
 
 struct EmojiMatchModelView: View {
     @State var resultText: String?
@@ -179,3 +182,4 @@ struct EmojiMatchModelView: View {
 #Preview {
     EmojiMatchModelView()
 }
+#endif
