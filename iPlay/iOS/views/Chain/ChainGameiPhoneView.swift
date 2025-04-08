@@ -169,6 +169,7 @@ struct ChainiPhoneView: View {
 
         for _ in 0..<100 {
             let start = wordBank.randomElement()!
+            self.chainLinks = [ChainLink(playerName: playerManager.currentPlayer.id.displayName, value: start.capitalized)]
             let end = wordBank.randomElement()!
             if start == end { continue }
 

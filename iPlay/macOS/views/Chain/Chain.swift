@@ -16,7 +16,7 @@ struct Chain: View {
         VStack(spacing: 20) {
             ScrollView(.horizontal) {
                 HStack {
-                    Text(mcManager.getChain())
+                    Text(formatChainText())
                         .font(.headline)
                         .padding()
                 }
