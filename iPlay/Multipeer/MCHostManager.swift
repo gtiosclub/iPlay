@@ -44,7 +44,13 @@ class MCHostManager: NSObject, ObservableObject {
     var spectrumPrompt: SpectrumPrompt?
     var spectrumGuesses = [PlayerGuess]()
     
-    var chainLinks = [ChainLink]()
+    var chainLinks = [ChainLink]() {
+        didSet {
+            print("chainLinks updated!")
+            // Or fire off any logic needed here directly
+        }
+    }
+    var endWord: String? = nil
     
 #if os(macOS)
     var emojiMatchImages: [MCPeerID : NSImage] = [:]
@@ -103,14 +109,6 @@ class MCHostManager: NSObject, ObservableObject {
         }
     }
     
-    func startChainTimer() {
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
-            self.secondsElapsed += 1.0
-            let guessTime = MCDataFloat(num: self.secondsElapsed)
-            self.sendChainTimer(guessTime)
-        }
-    }
-    
     func endInfectedGame() {
         print("ending infected!")
         timer?.invalidate()
@@ -139,6 +137,9 @@ class MCHostManager: NSObject, ObservableObject {
             infectedPlayers[infectedIndex].isInfected = true
         }
     }
+    
+    //*********  CHAIN  *********//
+    
     func getChainString(_ links: [ChainLink]) -> String {
         return links.map { $0.value }.joined(separator: " → ")
     }
@@ -170,6 +171,21 @@ class MCHostManager: NSObject, ObservableObject {
             print("\(player): \(chainString)")
         }
         print("---------------------------")
+    }
+    
+    func startChainTimer() {
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            self.secondsElapsed += 1.0
+            let guessTime = MCDataFloat(num: self.secondsElapsed)
+            self.sendChainTimer(guessTime)
+        }
+    }
+    
+    func allChainPlayersCompleted() {
+        // This function gets called when all players have completed their chains
+        // You can use this to transition to the next game state, show scores, etc.
+        print("All players have successfully completed their word chains!")
+        // Additional game end logic here
     }
     
 }
