@@ -17,7 +17,7 @@ struct DogFightPlayer: Hashable, Identifiable {
     var playerObject: SKNode = SKShapeNode(circleOfRadius: 10)
     let vectorMagnitude: Double = 20.0 //Constant velocity that planes fly, they only change direction for now
     var heading: Vector = Vector(x:0,y:1) //Normalized vector where plane is currently pointing (magnitude should be 1)
-    
+    var avatar: String
     //TO-DO: create function to update heading vectors
     
     func move() {
