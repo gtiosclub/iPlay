@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 import NaturalLanguage
 
-struct ChainLink: Identifiable {
+struct ChainLink: Identifiable, Codable {
     let id = UUID()
     let playerName: String
     let value: String
@@ -18,11 +18,13 @@ struct ChainLink: Identifiable {
 struct ChainiPhoneView: View {
     @State private var word: String = ""
     @State private var wordChain: [String] = []
+    @State private var chainLinks: [ChainLink] = []
     @State private var showRejectedMessage: Bool = false
     @State private var gameOver: Bool = false
     @State private var startWord: String = ""
     @State private var endWord: String = ""
     
+    let playerManager = MCPlayerManager.shared!
     let threshold = 3.6
     let wordBank = ["apple", "razor", "desert", "penguin", "moon", "fire", "water", "forest", "robot", "music", "shark", "keyboard", "snow", "book", "train", "dream", "camera", "storm", "clock", "planet"]
 
@@ -108,6 +110,17 @@ struct ChainiPhoneView: View {
         if checkWordValidity(word: trimmed) {
             wordChain.append(trimmed.capitalized)
             
+            // Create a new ChainLink and add it to the array
+            let newLink = ChainLink(playerName: playerManager.currentPlayer.id.displayName, value: trimmed.capitalized)
+            chainLinks.append(newLink)
+            
+            // Send the updated chain to the host
+            playerManager.submitChainLinks(chainLinks)
+            
+            // Print the chain locally
+            let chainString = wordChain.joined(separator: " → ")
+            print("Current chain: \(chainString)")
+
             if trimmed.lowercased() == endWord.lowercased() {
                 gameOver = true
             }
@@ -149,11 +162,14 @@ struct ChainiPhoneView: View {
     
     func pickStartAndEndWords() -> (String, String) {
         guard let embedding = NLEmbedding.wordEmbedding(for: .english) else {
-            return ("Apple", "Razor")
+            let start = "Apple"
+            self.chainLinks = [ChainLink(playerName: playerManager.currentPlayer.id.displayName, value: start)]
+            return (start, "Razor")
         }
 
         for _ in 0..<100 {
             let start = wordBank.randomElement()!
+            self.chainLinks = [ChainLink(playerName: playerManager.currentPlayer.id.displayName, value: start.capitalized)]
             let end = wordBank.randomElement()!
             if start == end { continue }
 
@@ -169,6 +185,6 @@ struct ChainiPhoneView: View {
     }
 }
 
-#Preview {
-    ChainiPhoneView()
-}
+//#Preview {
+//    ChainiPhoneView()
+//}

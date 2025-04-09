@@ -44,7 +44,8 @@ class MCHostManager: NSObject, ObservableObject {
     var spectrumPrompt: SpectrumPrompt?
     var spectrumGuesses = [PlayerGuess]()
     
-    var chainLinks = [ChainLink]()
+    var chainPlayers: [ChainPlayer] = []
+    var endWord: String? = nil
     
 #if os(macOS)
     var emojiMatchImages: [MCPeerID : NSImage] = [:]
@@ -103,14 +104,6 @@ class MCHostManager: NSObject, ObservableObject {
         }
     }
     
-    func startChainTimer() {
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
-            self.secondsElapsed += 1.0
-            let guessTime = MCDataFloat(num: self.secondsElapsed)
-            self.sendChainTimer(guessTime)
-        }
-    }
-    
     func endInfectedGame() {
         print("ending infected!")
         timer?.invalidate()
@@ -138,6 +131,56 @@ class MCHostManager: NSObject, ObservableObject {
             infectedPlayers[infectorIndex].points += 20
             infectedPlayers[infectedIndex].isInfected = true
         }
+    }
+    
+    //*********  CHAIN  *********//
+    func getChainsByPlayer() -> [String: [String]] {
+        var chainsByPlayer: [String: [String]] = [:]
+        for player in chainPlayers {
+            chainsByPlayer[player.name] = player.chain
+        }
+        return chainsByPlayer
+    }
+
+    func getLatestChain() -> String {
+        return chainPlayers.flatMap { $0.chain }.joined(separator: " → ")
+    }
+    
+    func getChainLinksByPlayer() -> [String: [ChainLink]] {
+        var result: [String: [ChainLink]] = [:]
+        for player in chainPlayers {
+            result[player.name] = player.chain.map { ChainLink(playerName: player.name, value: $0) }
+        }
+        return result
+    }
+
+    func applyChainPointsToGameParticipants() {
+        var updatedPlayers = gameParticipants
+        for chainPlayer in chainPlayers {
+            if let player = gameParticipants.first(where: { $0.id == chainPlayer.id }) {
+                var updatedPlayer = player
+                updatedPlayer.points += chainPlayer.points
+                updatedPlayers.remove(player)
+                updatedPlayers.insert(updatedPlayer)
+            }
+        }
+        gameParticipants = updatedPlayers
+    }
+
+    
+    func startChainTimer() {
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            self.secondsElapsed += 1.0
+            let guessTime = MCDataFloat(num: self.secondsElapsed)
+            self.sendChainTimer(guessTime)
+        }
+    }
+    
+    func allChainPlayersCompleted() {
+        // This function gets called when all players have completed their chains
+        // You can use this to transition to the next game state, show scores, etc.
+        print("All players have successfully completed their word chains!")
+        // Additional game end logic here
     }
     
 }
@@ -186,8 +229,28 @@ extension MCHostManager: MCSessionDelegate {
                 }
             case "chainWord":
                 let word = try mcData.decodeData(id: mcData.id, as: MCDataString.self)
-                print("Recieved word from: \(peerID.displayName): \(word.message)")
-                chainLinks.append(ChainLink(playerName: peerID.displayName, value: word.message))
+                print("Received word from: \(peerID.displayName): \(word.message)")
+                
+                if let index = chainPlayers.firstIndex(where: { $0.id == peerID }) {
+                    chainPlayers[index].chain.append(word.message)
+                    chainPlayers[index].points = chainPlayers[index].chain.count
+                } else {
+                    let newPlayer = ChainPlayer(id: peerID, name: peerID.displayName, points: 1, chain: [word.message])
+                    chainPlayers.append(newPlayer)
+                }
+
+            case "chainLinks":
+                let links = try mcData.decodeData(id: mcData.id, as: [ChainLink].self)
+                let words = links.map { $0.value }
+                print("Received chain from \(peerID.displayName): \(words.joined(separator: " → "))")
+                
+                if let index = chainPlayers.firstIndex(where: { $0.id == peerID }) {
+                    chainPlayers[index].chain = words
+                    chainPlayers[index].points = words.count
+                } else {
+                    let newPlayer = ChainPlayer(id: peerID, name: peerID.displayName, points: words.count, chain: words)
+                    chainPlayers.append(newPlayer)
+                }
 
                 
             //Add Additional Cases Here:
