@@ -28,6 +28,7 @@ class MCPlayerManager: NSObject {
     var gameState: GameState = .Infected
     
     
+    
     //SPECTRUM
     var spectrumPhoneState: SpectrumPhoneState = .instructions
     

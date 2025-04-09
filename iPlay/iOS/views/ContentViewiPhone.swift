@@ -41,7 +41,9 @@ struct ContentViewiPhone: View {
                                 } else {
                                     print("No session")
                                 }
-                            }
+                            },
+                            username: username,
+                            avatar: avatar ?? "BarrelSprite"
                         )
                 case .inLobby:
                     Text("Welcome to the lobby")
