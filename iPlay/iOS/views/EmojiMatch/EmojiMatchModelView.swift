@@ -91,8 +91,6 @@ struct EmojiMatchModelView: View {
                         }
                     }
                     
-                  
-                    
                     // If you need the overall best detection
                     if let bestDetection = finalDetections.max(by: { $0[4] < $1[4] }) {
                         let bestClass = Int(bestDetection[5])

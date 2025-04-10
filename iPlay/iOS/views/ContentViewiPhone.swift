@@ -58,7 +58,7 @@ struct ContentViewiPhone: View {
                     case .Chain:
                         ChainiPhoneView()
                     case .EmojiMatch:
-                        Text("insert emoji match view here")
+                        EmojiMatchStartView()
                     case .Spectrum:
                         ZStack {
                             Image(.spectrumPhoneBackground)
@@ -95,7 +95,6 @@ struct ContentViewiPhone: View {
                 }
             }
         } else {
-            
             ZStack {
                 Image("iPhoneBackground")
                     .resizable()
