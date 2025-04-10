@@ -54,6 +54,7 @@ struct ScoreboardScreen: View {
                 .listStyle(PlainListStyle())
                 Button("Return to Lobby") {
                     MCHostManager.shared?.viewState = .inLobby
+                    MCHostManager.shared?.sendViewStateUpdate(MCHostManager.shared!.viewState)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight:.infinity)

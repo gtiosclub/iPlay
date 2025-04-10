@@ -65,8 +65,8 @@ struct MCData: Codable {
                 throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
             }
             self.data = encodedData
-        case "chainWord":
-            let encodedData = try? JSONEncoder().encode(data as? MCDataString)
+        case "chainWords":
+            let encodedData = try? JSONEncoder().encode(data as? ChainWordPair)
             guard let encodedData = encodedData else {
                 throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
             }
@@ -79,6 +79,18 @@ struct MCData: Codable {
             self.data = encodedData
         case "chainLinks":
             let encodedData = try? JSONEncoder().encode(data as? [ChainLink])
+            guard let encodedData = encodedData else {
+                throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
+            }
+            self.data = encodedData
+        case "chainCompletion":
+            let encodedData = try? JSONEncoder().encode(data as? ChainCompletion)
+            guard let encodedData = encodedData else {
+                throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
+            }
+            self.data = encodedData
+        case "viewStateUpdate":
+            let encodedData = try? JSONEncoder().encode(data as? ViewState)
             guard let encodedData = encodedData else {
                 throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
             }
@@ -141,12 +153,12 @@ struct MCData: Codable {
                 throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
             }
             return guess as! T
-        case "chainWord":
-            let chainWord = try JSONDecoder().decode(MCDataString.self, from: data)
-            guard chainWord is T else {
+        case "chainWords":
+            let chainWords = try JSONDecoder().decode(ChainWordPair.self, from: data)
+            guard chainWords is T else {
                 throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
             }
-            return chainWord as! T
+            return chainWords as! T
         case "chainTimer":
             let chainTimer = try JSONDecoder().decode(MCDataFloat.self, from: data)
             guard chainTimer is T else {
@@ -159,6 +171,18 @@ struct MCData: Codable {
                 throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
             }
             return chainLinks as! T
+        case "chainCompletion":
+            let completion = try JSONDecoder().decode(ChainCompletion.self, from: data)
+            guard completion is T else {
+                throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
+            }
+            return completion as! T
+        case "viewStateUpdate":
+            let viewState = try JSONDecoder().decode(ViewState.self, from: data)
+            guard viewState is T else {
+                throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
+            }
+            return viewState as! T
         default:
             throw MCDataError.invalidID(message: "\(id) is not supported for MCData")
         }

@@ -21,8 +21,12 @@ struct ChainiPhoneView: View {
     @State private var chainLinks: [ChainLink] = []
     @State private var showRejectedMessage: Bool = false
     @State private var gameOver: Bool = false
+    @State private var isWinner: Bool = false
     @State private var startWord: String = ""
     @State private var endWord: String = ""
+    @State private var completionPosition: Int? = nil
+    @State private var timer: Timer? = nil
+    @State private var timeElapsed: Int = 0
     
     let playerManager = MCPlayerManager.shared!
     let threshold = 3.6
@@ -58,8 +62,12 @@ struct ChainiPhoneView: View {
                 .font(.subheadline)
                 .foregroundColor(.secondary)
 
-            if gameOver {
+            if gameOver && isWinner {
                 Text("🎉 You Win! 🎉")
+                    .font(.title)
+                    .foregroundColor(.green)
+            } else if gameOver {
+                Text("🫵😂 You Lose! ")
                     .font(.title)
                     .foregroundColor(.green)
             }
@@ -93,11 +101,38 @@ struct ChainiPhoneView: View {
         }
         .animation(.easeInOut, value: showRejectedMessage)
         .padding()
+        .onChange(of: playerManager.chainCompletionInfo) { newValue in
+            if let completion = newValue {
+                completionPosition = completion.position
+            }
+        }
         .onAppear {
-            let (start, end) = pickStartAndEndWords()
-            startWord = start.capitalized
-            endWord = end.capitalized
-            wordChain = [startWord]
+            startGame()
+            startTimer()
+            if let startWord = playerManager.chainStartWord,
+               let endWord = playerManager.chainEndWord {
+                self.startWord = startWord
+                self.endWord = endWord
+                self.wordChain = [startWord]
+            }
+        }
+    }
+    
+    func startGame() {
+        showRejectedMessage = false
+        gameOver = false
+        isWinner = false
+        wordChain = []
+        chainLinks = []
+    }
+    
+    func startTimer() {
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { t in
+            timeElapsed += 1
+            if timeElapsed >= 10 {
+                gameOver = true
+                timer?.invalidate()
+            }
         }
     }
     
@@ -110,19 +145,16 @@ struct ChainiPhoneView: View {
         if checkWordValidity(word: trimmed) {
             wordChain.append(trimmed.capitalized)
             
-            // Create a new ChainLink and add it to the array
             let newLink = ChainLink(playerName: playerManager.currentPlayer.id.displayName, value: trimmed.capitalized)
             chainLinks.append(newLink)
-            
-            // Send the updated chain to the host
             playerManager.submitChainLinks(chainLinks)
-            
-            // Print the chain locally
+
             let chainString = wordChain.joined(separator: " → ")
             print("Current chain: \(chainString)")
 
             if trimmed.lowercased() == endWord.lowercased() {
                 gameOver = true
+                isWinner = true
             }
         } else {
             showRejected()
@@ -158,30 +190,6 @@ struct ChainiPhoneView: View {
                 showRejectedMessage = false
             }
         }
-    }
-    
-    func pickStartAndEndWords() -> (String, String) {
-        guard let embedding = NLEmbedding.wordEmbedding(for: .english) else {
-            let start = "Apple"
-            self.chainLinks = [ChainLink(playerName: playerManager.currentPlayer.id.displayName, value: start)]
-            return (start, "Razor")
-        }
-
-        for _ in 0..<100 {
-            let start = wordBank.randomElement()!
-            self.chainLinks = [ChainLink(playerName: playerManager.currentPlayer.id.displayName, value: start.capitalized)]
-            let end = wordBank.randomElement()!
-            if start == end { continue }
-
-            if let vec1 = embedding.vector(for: start),
-               let vec2 = embedding.vector(for: end) {
-                let distance = zip(vec1, vec2).map { pow($0 - $1, 2) }.reduce(0, +).squareRoot()
-                if distance > 1.5 && distance < 4.0 {
-                    return (start, end)
-                }
-            }
-        }
-        return ("Apple", "Razor")
     }
 }
 

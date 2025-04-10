@@ -27,6 +27,10 @@ class MCPlayerManager: NSObject {
     var viewState: ViewState = .preLobby
     var gameState: GameState = .Infected
     
+    var chainStartWord: String? = nil
+    var chainEndWord: String? = nil
+    var chainCompletionInfo: ChainCompletion? = nil
+    
     
     //SPECTRUM
     var spectrumPhoneState: SpectrumPhoneState = .instructions
@@ -94,7 +98,15 @@ extension MCPlayerManager: MCSessionDelegate {
                 print("Recieved hint: \(prompt.message)")
                 spectrumHint = prompt.message
                 spectrumPhoneState = .youAreGuessing
-                
+            case "chainWords":
+                let wordPair = try mcData.decodeData(id: mcData.id, as: ChainWordPair.self)
+                print("Received chain words: \(wordPair.startWord) → \(wordPair.endWord)")
+                self.chainStartWord = wordPair.startWord
+                self.chainEndWord = wordPair.endWord
+            case "chainCompletion":
+                let completion = try mcData.decodeData(id: mcData.id, as: ChainCompletion.self)
+                print("Chain completed! Position: \(completion.position) of \(completion.totalPlayers)")
+                self.chainCompletionInfo = completion
             case "gameStateManagement":
                 let newGameState = try mcData.decodeData(id: mcData.id, as: GameState.self)
                 gameState = newGameState
@@ -141,6 +153,10 @@ extension MCPlayerManager: MCSessionDelegate {
                     currentInfectedStatus = infectedState.infected
                     print(currentPlayer)
                 }
+            case "viewStateUpdate":
+                let newViewState = try mcData.decodeData(id: mcData.id, as: ViewState.self)
+                print("Received view state update: \(newViewState)")
+                viewState = newViewState
                 
             default:
                 print("Unhandled ID: \(mcData.id)")

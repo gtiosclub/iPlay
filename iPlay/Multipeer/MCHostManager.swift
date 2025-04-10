@@ -46,6 +46,11 @@ class MCHostManager: NSObject, ObservableObject {
     
     var chainPlayers: [ChainPlayer] = []
     var endWord: String? = nil
+    var chainStartWord: String? = nil
+    var chainEndWord: String? = nil
+    var completedChainPlayers: [MCPeerID] = []
+    let wordBank = ["apple", "razor", "desert", "penguin", "moon", "fire", "water", "forest", "robot", "music", "shark", "keyboard", "snow", "book", "train", "dream", "camera", "storm", "clock", "planet"]
+
     
 #if os(macOS)
     var emojiMatchImages: [MCPeerID : NSImage] = [:]
@@ -141,10 +146,6 @@ class MCHostManager: NSObject, ObservableObject {
         }
         return chainsByPlayer
     }
-
-    func getLatestChain() -> String {
-        return chainPlayers.flatMap { $0.chain }.joined(separator: " → ")
-    }
     
     func getChainLinksByPlayer() -> [String: [ChainLink]] {
         var result: [String: [ChainLink]] = [:]
@@ -171,16 +172,90 @@ class MCHostManager: NSObject, ObservableObject {
     func startChainTimer() {
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
             self.secondsElapsed += 1.0
-            let guessTime = MCDataFloat(num: self.secondsElapsed)
-            self.sendChainTimer(guessTime)
         }
     }
+    
+    func checkAllPlayersComplete() {
+        if gameParticipants.count > 0 && completedChainPlayers.count == gameParticipants.count {
+            allChainPlayersCompleted()
+        }
+    }
+    
+    func checkChainCompletion(word: String, fromPeer peerID: MCPeerID) -> Bool {
+        // Case-insensitive comparison
+        if word.lowercased() == chainEndWord?.lowercased() {
+            // Make sure we don't add the player twice
+            if !completedChainPlayers.contains(peerID) {
+                // Add player to completed list in order of completion
+                completedChainPlayers.append(peerID)
+                
+                // Calculate points based on finish position (1st gets most points)
+                let position = completedChainPlayers.count
+                let totalPlayers = gameParticipants.count
+                
+                // Award completion bonus, higher for earlier finishers
+                // Example: 50 for 1st, 40 for 2nd, 30 for 3rd, etc.
+                let completionPoints = max(60 - (position * 10), 10)
+                
+                if let index = chainPlayers.firstIndex(where: { $0.id == peerID }) {
+                    chainPlayers[index].points += completionPoints
+                    print("\(peerID.displayName) completed chain in position \(position)! Awarded \(completionPoints) points")
+                }
+                
+                // Check if all players are done
+                checkAllPlayersComplete()
+                
+                return true
+            }
+        }
+        return false
+    }
+    
     
     func allChainPlayersCompleted() {
         // This function gets called when all players have completed their chains
         // You can use this to transition to the next game state, show scores, etc.
         print("All players have successfully completed their word chains!")
         // Additional game end logic here
+    }
+    
+    func generateChainWords() {
+        // Simple implementation - could be enhanced with similarity checking
+        guard wordBank.count >= 2 else { return }
+        
+        // Shuffle and pick two different words
+        let shuffled = wordBank.shuffled()
+        chainStartWord = shuffled[0].capitalized
+        chainEndWord = shuffled[1].capitalized
+        
+        // Make sure they're different
+        if chainStartWord == chainEndWord {
+            chainEndWord = wordBank.filter { $0 != chainStartWord?.lowercased() }.randomElement()?.capitalized
+        }
+        
+        // Send to all connected peers
+        sendChainWords()
+    }
+    
+    func sendChainWords() {
+        guard let session = session,
+              let start = chainStartWord,
+              let end = chainEndWord else {
+            print("Cannot send chain words - missing session or words")
+            return
+        }
+        
+        do {
+            var mcData = MCData(id: "chainWords")
+            let chainWordPair = ChainWordPair(startWord: start, endWord: end)
+            try mcData.encodeData(id: "chainWords", data: chainWordPair)
+            let data = try JSONEncoder().encode(mcData)
+            
+            try session.send(data, toPeers: session.connectedPeers, with: .reliable)
+            print("Sent chain words: \(start) → \(end)")
+        } catch {
+            print("Failed to send chain words: \(error)")
+        }
     }
     
 }
@@ -452,18 +527,24 @@ extension MCHostManager {
         
     }
     
-    func sendChainTimer(_ time: MCDataFloat) {
+    func sendViewStateUpdate(_ newState: ViewState) {
         guard let session else {
-            print("Could not send chain timer, no session active")
+            print("Could not send view state update, no session active")
             return
         }
+        
         do {
-            var mcData = MCData(id:"chainTimer")
-            try mcData.encodeData(id: "chainTimer", data: time)
+            var mcData = MCData(id: "viewStateUpdate")
+            try mcData.encodeData(id: "viewStateUpdate", data: newState)
             let data = try JSONEncoder().encode(mcData)
+            
+            try session.send(data, toPeers: session.connectedPeers, with: .reliable)
+            self.viewState = newState
+            print("Sent view state update: \(newState)")
         } catch {
-            print("Failed to send data: \(error.localizedDescription)")
+            print("Failed to send view state update: \(error.localizedDescription)")
         }
     }
+    
     //Add other Multipeer Connectivity send functions here:
 }

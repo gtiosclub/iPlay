@@ -10,7 +10,7 @@ import SwiftUI
 struct Chain: View {
     @Bindable var mcManager: MCHostManager
     @State private var completedPlayers = [String]() // Preserves order
-    @State private var timeRemaining = 60
+    @State private var timeRemaining = 10
     @State private var gameEnded = false
     @State private var timer: Timer?
 
@@ -28,7 +28,8 @@ struct Chain: View {
                 Text("⏱️ Game Over!")
                     .font(.headline)
                     .foregroundColor(.red)
-            } else if allPlayersCompleted {
+            } else if mcManager.gameParticipants.count > 0 &&
+                        completedPlayers.count == mcManager.gameParticipants.count {
                 Text("🎉 All players completed their chains! 🎉")
                     .font(.headline)
                     .foregroundColor(.green)
@@ -66,21 +67,12 @@ struct Chain: View {
         }
         .padding()
         .onAppear {
+            mcManager.generateChainWords()
             startTimer()
         }
         .onChange(of: mcManager.getChainsByPlayer()) { _ in
             checkForCompletedChains()
         }
-    }
-
-    var allPlayersCompleted: Bool {
-        mcManager.gameParticipants.count > 0 &&
-        completedPlayers.count == mcManager.gameParticipants.count
-    }
-
-    func formatPlayerChain(_ chain: [String], playerName: String) -> String {
-        let formatted = chain.joined(separator: " → ")
-        return isCompleted(playerName) ? formatted + " 🏆" : formatted
     }
 
     func isCompleted(_ playerName: String) -> Bool {
@@ -99,7 +91,8 @@ struct Chain: View {
             }
         }
 
-        if allPlayersCompleted {
+        if mcManager.gameParticipants.count > 0 &&
+            completedPlayers.count == mcManager.gameParticipants.count {
             endGame()
         }
     }
@@ -131,6 +124,32 @@ struct Chain: View {
         mcManager.applyChainPointsToGameParticipants()
         mcManager.viewState = .scoreboard
         print("Chain game ended.")
+    }
+    
+    func getPositionText(playerName: String) -> String {
+        guard let index = mcManager.completedChainPlayers.firstIndex(where: { $0.displayName == playerName }) else {
+            return ""
+        }
+        
+        let position = index + 1
+        let suffix: String
+        switch position {
+        case 1: suffix = "st"
+        case 2: suffix = "nd"
+        case 3: suffix = "rd"
+        default: suffix = "th"
+        }
+        
+        return " (Finished \(position)\(suffix))"
+    }
+    
+    func formatPlayerChain(_ chain: [String], playerName: String) -> String {
+        let formatted = chain.joined(separator: " → ")
+        if isCompleted(playerName) {
+            return formatted + " 🏆" + getPositionText(playerName: playerName)
+        } else {
+            return formatted
+        }
     }
 
 }

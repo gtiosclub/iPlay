@@ -131,9 +131,9 @@ struct ContentViewiPhone: View {
                     }) {
                         Text("Join game")
                             .font(.title2)
-                            .foregroundColor(.white) // Text color
-                            .frame(width: 240, height: 60) // Size of button
-                            .background( // Button background color
+                            .foregroundColor(.white)
+                            .frame(width: 240, height: 60)
+                            .background(
                                     RoundedRectangle(cornerRadius: 30)
                                         .stroke(Color("ButtonBlue"), lineWidth: 1).fill(Color.black)
                                         .opacity((username.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.2 : 1.0))
