@@ -10,7 +10,7 @@ import SwiftUI
 struct Chain: View {
     @Bindable var mcManager: MCHostManager
     @State private var completedPlayers = [String]() // Preserves order
-    @State private var timeRemaining = 10
+    @State private var timeRemaining = 30
     @State private var gameEnded = false
     @State private var timer: Timer?
 
@@ -37,7 +37,7 @@ struct Chain: View {
 
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 15) {
-                    ForEach(Array(mcManager.getChainsByPlayer().keys), id: \.self) { playerName in
+                    ForEach(Array(mcManager.getChainsByPlayer().keys).sorted(), id: \.self) { playerName in
                         if let playerChain = mcManager.getChainsByPlayer()[playerName] {
                             VStack(alignment: .leading) {
                                 Text(playerName)
@@ -92,7 +92,7 @@ struct Chain: View {
         }
 
         if mcManager.gameParticipants.count > 0 &&
-            completedPlayers.count == mcManager.gameParticipants.count {
+            completedPlayers.count == mcManager.gameParticipants.count - 1 {
             endGame()
         }
     }
@@ -122,6 +122,7 @@ struct Chain: View {
         timer = nil
         gameEnded = true
         mcManager.applyChainPointsToGameParticipants()
+        mcManager.chainPlayers = []
         mcManager.viewState = .scoreboard
         print("Chain game ended.")
     }
