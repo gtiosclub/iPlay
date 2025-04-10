@@ -27,7 +27,7 @@ struct DogFightPlayer: Hashable, Identifiable {
         //Input heading from gyro should be in range - 1/2 pi to 1/2 pi,
         let turnAngle = inputAngle.num * turnSpeed / 60.0
         let angleHeading = atan2(heading.y, heading.x)
-        let newHeading = angleHeading + turnAngle
+        let newHeading = angleHeading - turnAngle
         heading = Vector(x: cos(newHeading), y: sin(newHeading))
 
     }
