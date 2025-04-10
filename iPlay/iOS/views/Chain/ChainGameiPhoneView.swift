@@ -23,81 +23,265 @@ struct ChainiPhoneView: View {
     @State private var gameOver: Bool = false
     @State private var startWord: String = ""
     @State private var endWord: String = ""
+    @State private var guessCounter: Int = 0
+    @State private var timeRemaining: Int = 60
+    @State private var timer: Timer? = nil
+    @FocusState private var fieldIsFocused: Bool
+    @State private var navigateToWin = false
+    @State private var navigateToLose = false
     
     let playerManager = MCPlayerManager.shared!
     let threshold = 3.6
     let wordBank = ["apple", "razor", "desert", "penguin", "moon", "fire", "water", "forest", "robot", "music", "shark", "keyboard", "snow", "book", "train", "dream", "camera", "storm", "clock", "planet"]
-
+    
+    
     var body: some View {
-        VStack(spacing: 20) {
-            ScrollViewReader { proxy in
-                ScrollView(.horizontal) {
-                    HStack {
-                        ForEach(wordChain.indices, id: \.self) { index in
-                            Text(wordChain[index])
+        if (gameOver) {
+            if (startWord == endWord) {
+                WinningView(wordChain: wordChain, guessCounter: guessCounter)
+            } else {
+                LosingView(wordChain: wordChain, currWord: startWord)
+            }
+        } else {
+            ZStack {
+                Image("ChainPhoneBackground")
+                    .resizable()
+                    .scaledToFill()
+                    .frame(maxWidth: 400, maxHeight: 530)
+                    .clipped()
+                    .edgesIgnoringSafeArea(.all)
+                    
+                // Blue overlay with opacity
+                Color.blue
+                    .opacity(0.6) // Adjust opacity value as needed
+                    .edgesIgnoringSafeArea(.all)
+                
+                VStack(spacing: 10) {
+                    VStack(spacing: 5) {
+                        Text("Target: ")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .padding(.trailing, 30)
+                        
+                        Text(endWord)
+                            .font(.system(size: 48, weight: .bold))
+                            .foregroundColor(.white)
+                    }
+                    .padding(.top, 25)
+                    
+                    Spacer()
+                    
+                    VStack(spacing: 8) {
+                        Image("up-arrow")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 50, height: 50)
+                    }
+                    
+                    Spacer()
+                    
+                    VStack(spacing: 8) {
+                        if (guessCounter == 0) {
+                            Text("Starting Word: ")
                                 .font(.headline)
-                                .id(index)
-                            if index != wordChain.count - 1 {
-                                Text("→")
+                                .foregroundColor(.white)
+                                .padding(.trailing, 9)
+                        } else {
+                            Text("Current Word: ")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .padding(.trailing, 9)
+                        }
+                        
+                        Text(startWord)
+                            .font(.system(size: 48, weight: .bold))
+                            .foregroundColor(.white)
+                        
+                    }
+                    
+                    VStack {
+                        Text("\(guessCounter) guesses")
+                            .foregroundColor(.white)
+                            .padding(.bottom, 5)
+                        
+                        if showRejectedMessage {
+                            Text("❌ Word Rejected ❌")
+                                .foregroundColor(.red)
+                                .transition(.opacity)
+                                .padding(.bottom, 5)
+                        }
+                        
+                        Text("\(timeRemaining)s")
+                            .foregroundColor(.white)
+                    }
+                    .padding(.horizontal, 40)
+                    
+                    ZStack(alignment: .trailing) {
+                        TextField("Guess a word...", text: $word)
+                            .padding()
+                            .frame(width: 400 , height: 60)
+                            .background(Color.black)
+                            .foregroundColor(.white)
+                            .accentColor(.white) // Makes the caret white
+                            .cornerRadius(10)
+                            .autocorrectionDisabled()
+                            .onSubmit {
+                                fieldIsFocused = true
+                            }
+                            .focused($fieldIsFocused)
+                            .onAppear {
+                                fieldIsFocused = true
+                            }
+                        
+                        Button(action: { submitWord() }) {
+                            ZStack {
+                                Circle()
+                                    .fill(Color(red: 241/255, green: 171/255, blue: 134/255))
+                                    .frame(width: 40, height: 40) // Customize size here
+
+                                Image("Submit")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 20, height: 20) // Adjust based on your icon size
                             }
                         }
-                        if !gameOver {
-                            Text("→ ___")
+                        .padding(.trailing, 24)
+                    }
+                    .padding(.bottom, 20)
+                }
+                .padding(.top, 15)
+                .padding()
+            }
+            .animation(.easeInOut, value: showRejectedMessage)
+                .onAppear {
+                    let (start, end) = pickStartAndEndWords()
+                    startWord = start.capitalized
+                    endWord = end.capitalized
+                    wordChain = [startWord]
+                    startTimer()
+                }
+        }
+    }
+    
+    struct WinningView: View {
+        let wordChain: [String]
+        let guessCounter: Int
+        
+        var body: some View {
+            ZStack {
+                Image("ChainPhoneBackground")
+                    .resizable()
+                    .scaledToFill()
+                    .frame(maxWidth: 400, maxHeight: .infinity)
+                    .clipped()
+                    .edgesIgnoringSafeArea(.all)
+                
+                // Peach background color
+                Color(red: 0.97, green: 0.82, blue: 0.73)
+                    .opacity(0.6) // Adjust opacity value as needed
+                    .edgesIgnoringSafeArea(.all)
+                
+                VStack(spacing: 24) {
+                    Text("Success!")
+                        .font(.system(size: 38, weight: .bold))
+                        .padding(.top, 40)
+                    
+                    Text("You completed the chain in \(guessCounter) steps!")
+                        .font(.system(size: 18, weight: .medium))
+                    
+                    Text("Check the big screen to view the leaderboard and scores!")
+                        .font(.system(size: 16))
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 20)
+                    
+                    Spacer()
+                        .frame(height: 20)
+                    
+                    Text("Your Chain:")
+                        .font(.system(size: 22, weight: .bold))
+                        .padding(.bottom, 8)
+                    
+                    VStack(spacing: 12) {
+                        // Using a loop to display all words in the chain
+                        ForEach(0..<wordChain.count) { index in
+                            Text(wordChain[index])
+                                .font(.system(size: 20))
                         }
                     }
-                    .padding()
+                    
+                    Spacer()
                 }
-                .onChange(of: wordChain.count) { _ in
-                    withAnimation {
-                        proxy.scrollTo(wordChain.count - 1, anchor: .trailing)
-                    }
-                }
-            }
-            
-            Text("End Word: \(endWord)")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-
-            if gameOver {
-                Text("🎉 You Win! 🎉")
-                    .font(.title)
-                    .foregroundColor(.green)
-            }
-            
-            if showRejectedMessage {
-                Text("❌ Word Rejected ❌")
-                    .foregroundColor(.red)
-                    .transition(.opacity)
-            }
-            
-            if !gameOver {
-                TextField("Enter next word", text: $word)
-                    .padding()
-                    .disableAutocorrection(true)
-                    .background(Color.gray.opacity(0.2))
-                    .cornerRadius(12)
-                    .padding(.horizontal)
-                
-                Button(action: {
-                    submitWord()
-                }) {
-                    Text("Submit")
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(12)
-                        .padding(.horizontal)
-                }
+                .padding(.top, 20)
             }
         }
-        .animation(.easeInOut, value: showRejectedMessage)
-        .padding()
-        .onAppear {
-            let (start, end) = pickStartAndEndWords()
-            startWord = start.capitalized
-            endWord = end.capitalized
-            wordChain = [startWord]
+    }
+
+    struct LosingView: View {
+        let wordChain: [String]
+        let currWord: String
+        
+        var body: some View {
+            ZStack {
+                Image("ChainPhoneBackground")
+                    .resizable()
+                    .scaledToFill()
+                    .frame(maxWidth: 400, maxHeight: .infinity)
+                    .clipped()
+                    .edgesIgnoringSafeArea(.all)
+                
+                Color(.red)
+                    .opacity(0.6)
+                    .edgesIgnoringSafeArea(.all)
+                
+                VStack(spacing: 24) {
+                    Text("Time's up!")
+                        .font(.system(size: 38, weight: .bold))
+                        .foregroundColor(.white)
+                        .padding(.top, 40)
+                    
+                    Text("Your last word was \"" + currWord + "\"")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundColor(.white)
+                    
+                    Text("Check the big screen to view the leaderboard and scores!")
+                        .font(.system(size: 16))
+                        .foregroundColor(.white)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 20)
+                    
+                    Spacer()
+                        .frame(height: 20)
+                    
+                    Text("Your Chain:")
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundColor(.white)
+                        .padding(.bottom, 8)
+                    
+                    VStack(spacing: 12) {
+                        // Using a loop to display all words in the chain
+                        ForEach(0..<wordChain.count, id: \.self) { index in
+                            Text(wordChain[index])
+                                .font(.system(size: 20))
+                                .foregroundColor(.white)
+                        }
+                    }
+                    
+                    Spacer()
+                }
+                .padding(.top, 20)
+            }
+        }
+    }
+    
+    // Timer on the Phone Side
+    func startTimer() {
+        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+            if timeRemaining > 0 {
+                timeRemaining -= 1
+            } else {
+                timer?.invalidate()
+                gameOver = true
+            }
         }
     }
     
@@ -107,8 +291,11 @@ struct ChainiPhoneView: View {
         
         guard !trimmed.isEmpty else { return }
         
+        guessCounter += 1
+        
         if checkWordValidity(word: trimmed) {
             wordChain.append(trimmed.capitalized)
+            startWord = wordChain[wordChain.count - 1]
             
             // Create a new ChainLink and add it to the array
             let newLink = ChainLink(playerName: playerManager.currentPlayer.id.displayName, value: trimmed.capitalized)
