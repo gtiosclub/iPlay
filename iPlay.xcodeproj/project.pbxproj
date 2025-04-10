@@ -262,10 +262,11 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"iPlay/Preview Content\"";
-				DEVELOPMENT_TEAM = DR572YW6Z4;
+				DEVELOPMENT_TEAM = RNSWSF66B7;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iPlay/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "We need to take your picture for the Emoji Match Game";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "We need to connect the game host to game participants";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -282,7 +283,7 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.GTIOS.iPlayGame1;
+				PRODUCT_BUNDLE_IDENTIFIER = com.GTIOS.iPlayGame;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
@@ -304,10 +305,11 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"iPlay/Preview Content\"";
-				DEVELOPMENT_TEAM = DR572YW6Z4;
+				DEVELOPMENT_TEAM = RNSWSF66B7;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iPlay/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "We need to take your picture for the Emoji Match Game";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "We need to connect the game host to game participants";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -324,7 +326,7 @@
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.GTIOS.iPlayGame1;
+				PRODUCT_BUNDLE_IDENTIFIER = com.GTIOS.iPlayGame;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";

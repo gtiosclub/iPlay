@@ -33,7 +33,7 @@ struct ContentViewMac: View {
                             DogFight(mcManager: mcManager)
                         
                         case .EmojiMatch:
-                            Text("EmojiMatch")
+                            EmojiMatchGameView(mcManager: mcManager)
                             
                         case .Chain:
                             Chain(mcManager: mcManager)
