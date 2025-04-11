@@ -11,7 +11,6 @@ import SpriteKit
 
 struct DogFight: View {
     @ObservedObject var mcManager: MCHostManager
-    var dogFightPlayers: [DogFightPlayer] = [DogFightPlayer(avatar: "BottleSprite"), DogFightPlayer(avatar: "FlaskSprite")]
     
     var scene : SKScene {
         let scene = DogFightGame()
@@ -30,24 +29,24 @@ struct DogFight: View {
 
             VStack {
                 HStack(spacing: 8) {
-                    ForEach(dogFightPlayers) { player in
+                    #if os(macOS)
+                    ForEach(MCHostManager.shared!.dogFightPlayers, id: \.id) { player in
                         ZStack(alignment: .bottomTrailing) {
                             Image(player.avatar)
                                 .resizable()
                                 .scaledToFit()
-                                .frame(width: 50, height: 50)
+                                .frame(width: 75, height: 75)
 
                             Text("x\(player.lives)")
-                                .font(.caption)
+                                .font(.system(size: 22))
                                 .fontWeight(.bold)
-                                .foregroundColor(.black)
+                                .foregroundColor(Color(player.color))
                                 .padding(4)
-                                .background(Color.clear)
-                                .cornerRadius(4)
-                                .offset(x: 5, y: -4)
+                                .offset(x: 20, y: -15)
                         }
                         .offset(y:-10)
                     }
+                    #endif
                     Spacer()
                 }
                 Spacer()
@@ -58,5 +57,5 @@ struct DogFight: View {
 }
 
 #Preview {
-    DogFight(mcManager: MCHostManager(name: "TEST"))
+    DogFight(mcManager: MCHostManager(name: "test"))
 }

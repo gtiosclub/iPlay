@@ -93,9 +93,8 @@ struct LobbyView: View {
             let spriteName = availableSprites.popLast() ?? "PlaneBlank"
             let sprite = SKSpriteNode(imageNamed: spriteName)
             let color = planeSprites[spriteName] ?? NSColor.white
-            print("creating color: \(spriteName)")
             mcManager.dogFightPlayers.append(
-                DogFightPlayer(id: player.id, name: player.id.displayName, playerObject: sprite, avatar: player.avatar, color: color)
+                DogFightPlayer(id: player.id, name: player.id.displayName, playerObject: sprite, avatar: player.avatar, planeName: spriteName, color: color)
             )
         }
     }
