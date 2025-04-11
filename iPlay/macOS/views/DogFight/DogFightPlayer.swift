@@ -29,6 +29,7 @@ struct DogFightPlayer: Hashable, Identifiable {
     let vectorMagnitude: Double = 110.0 //Constant velocity that planes fly, they only change direction for now
     var heading: Vector = Vector(x:0,y:1) //Normalized vector where plane is currently pointing (magnitude should be 1)
     var avatar: String
+    var planeName: String // used for restoring plane sprite after being hit
     let turnSpeed: Double = 1.0
     #if os(macOS)
     let color: NSColor

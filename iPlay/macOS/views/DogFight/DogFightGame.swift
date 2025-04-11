@@ -125,7 +125,6 @@ class DogFightGame: SKScene, SKPhysicsContactDelegate {
 
 
         let sprite = player.playerObject
-        let originalTexture = sprite.texture
         sprite.texture = SKTexture(imageNamed: "PlaneDead")
 
         let flashOut = SKAction.fadeAlpha(to: 0.2, duration: 0.1)
@@ -134,7 +133,7 @@ class DogFightGame: SKScene, SKPhysicsContactDelegate {
         let repeatFlash = SKAction.repeat(flashSequence, count: 10)
 
         let restore = SKAction.run {
-            sprite.texture = originalTexture
+            sprite.texture = SKTexture(imageNamed: player.planeName)
             MCHostManager.shared!.dogFightPlayers[playerIndex].isHit = false
         }
 
