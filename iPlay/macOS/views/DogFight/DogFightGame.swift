@@ -44,7 +44,7 @@ class DogFightGame: SKScene, SKPhysicsContactDelegate {
             let currentHeading = player.playerObject.zRotation
             let targetHeading = atan2(player.heading.y, player.heading.x)
             
-            let interpolationFactor: CGFloat = 0.1  // Interpolate angle with easing (adjust factor for smoothness)
+            let interpolationFactor: CGFloat = 0.05  // Interpolate angle with easing (adjust factor for smoothness)
             let smoothedHeading = interpolateAngle(from: currentHeading, to: targetHeading, factor: interpolationFactor)
             
             player.playerObject.zRotation = smoothedHeading
