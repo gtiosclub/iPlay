@@ -28,6 +28,7 @@ class MCPlayerManager: NSObject {
     var gameState: GameState = .Infected
     
     
+    
     //SPECTRUM
     var spectrumPhoneState: SpectrumPhoneState = .instructions
     
@@ -201,6 +202,37 @@ extension MCPlayerManager {
         }
     }
     
+    func sendAngle(angle: Double) {
+        guard let session else {
+            print("Session is nil")
+            return
+        }
+        var mcData = MCData(id: "dogFightVector")
+        do {
+            try mcData.encodeData(id: mcData.id, data: MCDataFloat(num:angle))
+            let data = try JSONEncoder().encode(mcData)
+            try session.send(data, toPeers: session.connectedPeers, with: .unreliable)
+        } catch {
+            print(error)
+            return
+        }
+    }
+    
+    func shootBall() {
+        guard let session else {
+            print("Session is nil")
+            return
+        }
+        var mcData = MCData(id: "shootBall")
+        do {
+            let data = try JSONEncoder().encode(mcData)
+            try session.send(data, toPeers: session.connectedPeers, with: .reliable)
+        } catch {
+            print(error)
+            return
+        }
+    }
+    
     //Spectrum: Sends the prompt to host, which then sends to other players
     func sendHint(_ prompt: String) {
         guard let session else {
@@ -245,6 +277,50 @@ extension MCPlayerManager {
             try session.send(encodedGuess, toPeers: [host], with: .reliable)
         } catch {
             print("Failed to submit guess: \(error.localizedDescription)")
+        }
+    }
+    
+    func submitChainWord(_ word: String) {
+        guard let session else {
+            print("Session is nil")
+            return
+        }
+        
+        guard let host else {
+            print("No host in session")
+            return
+        }
+        
+        var mcWordData = MCData(id: "chainWord")
+        do {
+            try mcWordData.encodeData(id: "chainWord", data: mcWordData)
+            let encodedWord = try JSONEncoder().encode(mcWordData)
+            print("HOST: \(host.displayName)")
+            try session.send(encodedWord, toPeers: [host], with: .reliable)
+        } catch {
+            print("Failed to submit guess: \(error.localizedDescription)")
+        }
+    }
+    
+    func submitChainLinks(_ links: [ChainLink]) {
+        guard let session else {
+            print("Session is nil")
+            return
+        }
+        
+        guard let host else {
+            print("No host in session")
+            return
+        }
+        
+        var mcLinksData = MCData(id: "chainLinks")
+        do {
+            try mcLinksData.encodeData(id: "chainLinks", data: links)
+            let encodedLinks = try JSONEncoder().encode(mcLinksData)
+            print("Sending chain links to HOST: \(host.displayName)")
+            try session.send(encodedLinks, toPeers: [host], with: .reliable)
+        } catch {
+            print("Failed to submit chain links: \(error.localizedDescription)")
         }
     }
     

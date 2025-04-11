@@ -7,8 +7,9 @@
 
 import Foundation
 import MultipeerConnectivity
-
-
+#if os(macOS)
+import AppKit
+#endif
 
 enum SpectrumGameState: Codable {
     case instructions, whosPrompting, hintSubmitted, revealingGuesses, pointsAwarded, guessing
@@ -29,6 +30,10 @@ class MCHostManager: NSObject, ObservableObject {
     var numInfected: Int = 0
     var gameParticipants = Set<Player>()
     var infectedPlayers: [InfectedPlayer] = []
+    
+    var dogFightPlayers: [DogFightPlayer] = []
+    var dogFightBalls : [DogFightBall] = []
+    
     var secondsElapsed: Double = 0.0
     var timer: Timer?
     
@@ -38,6 +43,13 @@ class MCHostManager: NSObject, ObservableObject {
     var spectrumGameState: SpectrumGameState = .instructions
     var spectrumPrompt: SpectrumPrompt?
     var spectrumGuesses = [PlayerGuess]()
+    
+    var chainPlayers: [ChainPlayer] = []
+    var endWord: String? = nil
+    
+#if os(macOS)
+    var emojiMatchImages: [MCPeerID : NSImage] = [:]
+    #endif
 
     init(name: String) {
         let peerID = MCPeerID(displayName: name)
@@ -121,6 +133,56 @@ class MCHostManager: NSObject, ObservableObject {
         }
     }
     
+    //*********  CHAIN  *********//
+    func getChainsByPlayer() -> [String: [String]] {
+        var chainsByPlayer: [String: [String]] = [:]
+        for player in chainPlayers {
+            chainsByPlayer[player.name] = player.chain
+        }
+        return chainsByPlayer
+    }
+
+    func getLatestChain() -> String {
+        return chainPlayers.flatMap { $0.chain }.joined(separator: " → ")
+    }
+    
+    func getChainLinksByPlayer() -> [String: [ChainLink]] {
+        var result: [String: [ChainLink]] = [:]
+        for player in chainPlayers {
+            result[player.name] = player.chain.map { ChainLink(playerName: player.name, value: $0) }
+        }
+        return result
+    }
+
+    func applyChainPointsToGameParticipants() {
+        var updatedPlayers = gameParticipants
+        for chainPlayer in chainPlayers {
+            if let player = gameParticipants.first(where: { $0.id == chainPlayer.id }) {
+                var updatedPlayer = player
+                updatedPlayer.points += chainPlayer.points
+                updatedPlayers.remove(player)
+                updatedPlayers.insert(updatedPlayer)
+            }
+        }
+        gameParticipants = updatedPlayers
+    }
+
+    
+    func startChainTimer() {
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            self.secondsElapsed += 1.0
+            let guessTime = MCDataFloat(num: self.secondsElapsed)
+            self.sendChainTimer(guessTime)
+        }
+    }
+    
+    func allChainPlayersCompleted() {
+        // This function gets called when all players have completed their chains
+        // You can use this to transition to the next game state, show scores, etc.
+        print("All players have successfully completed their word chains!")
+        // Additional game end logic here
+    }
+    
 }
 
 extension MCHostManager: MCSessionDelegate {
@@ -135,6 +197,23 @@ extension MCHostManager: MCSessionDelegate {
             case "infectedVector":
                 let vector_data = try mcData.decodeData(id: mcData.id, as: Vector.self)
                 infectedPlayers.first(where: {$0.id.displayName == peerID.displayName})?.move(by: vector_data)
+            case "dogFightVector":
+                let angle_data = try mcData.decodeData(id: mcData.id, as: MCDataFloat.self)
+                if let index = dogFightPlayers.firstIndex(where: { $0.id.displayName == peerID.displayName }) {
+                    dogFightPlayers[index].updateHeading(by: angle_data)
+                }
+            case "shootBall":
+                //Find player who shot the ball and create ball with their heading
+                if let index = dogFightPlayers.firstIndex(where: {$0.id.displayName == peerID.displayName}) {
+                    let heading = dogFightPlayers[index].heading
+                    var position = dogFightPlayers[index].playerObject.position
+                    let  velocity = CGVector(dx: heading.x * 250, dy: heading.y * 250)
+                    //Move ball ahead so it doesn't collide with ball
+                    position.x += heading.x * 90
+                    position.y += heading.y * 90
+                    
+                    dogFightBalls.append(DogFightBall(velocity: velocity, position: position))
+                }
             case "spectrumHintFromPrompter":
                 let prompt = try mcData.decodeData(id: mcData.id, as: MCDataString.self)
                 print("Recieved hint: \(prompt.message)")
@@ -148,7 +227,42 @@ extension MCHostManager: MCSessionDelegate {
                     //Do scoring
                     sendSpectrumState(.revealingGuesses)
                 }
+            case "chainWord":
+                let word = try mcData.decodeData(id: mcData.id, as: MCDataString.self)
+                print("Received word from: \(peerID.displayName): \(word.message)")
+                
+                if let index = chainPlayers.firstIndex(where: { $0.id == peerID }) {
+                    chainPlayers[index].chain.append(word.message)
+                    chainPlayers[index].points = chainPlayers[index].chain.count
+                } else {
+                    let newPlayer = ChainPlayer(id: peerID, name: peerID.displayName, points: 1, chain: [word.message])
+                    chainPlayers.append(newPlayer)
+                }
+
+            case "chainLinks":
+                let links = try mcData.decodeData(id: mcData.id, as: [ChainLink].self)
+                let words = links.map { $0.value }
+                print("Received chain from \(peerID.displayName): \(words.joined(separator: " → "))")
+                
+                if let index = chainPlayers.firstIndex(where: { $0.id == peerID }) {
+                    chainPlayers[index].chain = words
+                    chainPlayers[index].points = words.count
+                } else {
+                    let newPlayer = ChainPlayer(id: peerID, name: peerID.displayName, points: words.count, chain: words)
+                    chainPlayers.append(newPlayer)
+                }
+
+                
             //Add Additional Cases Here:
+            case "emojiMatchImage":
+                guard let data = mcData.data else {
+                    print("NO Data recieved")
+                    return
+                }
+#if os(macOS)
+                let image = NSImage(data: data)
+                emojiMatchImages[peerID] = image
+#endif
             default:
                 print("Unhandled ID: \(mcData.id)")
             }
@@ -174,8 +288,16 @@ extension MCHostManager: MCSessionDelegate {
 extension MCHostManager: MCNearbyServiceAdvertiserDelegate {
     func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
         
+        var avatar = "DefaultAvatar"
+        if let context = context {
+            do {
+                avatar = try JSONDecoder().decode(String.self, from: context)
+            } catch {
+                print("Failed to decode avatar from context: \(error)")
+            }
+        }
         //Accepts the invitation request
-        gameParticipants.insert(Player(id: peerID))
+        gameParticipants.insert(Player(id: peerID, avatar: avatar))
         invitationHandler(true, session)
     }
 }
@@ -328,6 +450,20 @@ extension MCHostManager {
             print("Failed to send data: \(error.localizedDescription)")
         }
         
+    }
+    
+    func sendChainTimer(_ time: MCDataFloat) {
+        guard let session else {
+            print("Could not send chain timer, no session active")
+            return
+        }
+        do {
+            var mcData = MCData(id:"chainTimer")
+            try mcData.encodeData(id: "chainTimer", data: time)
+            let data = try JSONEncoder().encode(mcData)
+        } catch {
+            print("Failed to send data: \(error.localizedDescription)")
+        }
     }
     //Add other Multipeer Connectivity send functions here:
 }

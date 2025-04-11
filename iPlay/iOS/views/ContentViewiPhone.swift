@@ -14,6 +14,7 @@ struct ContentViewiPhone: View {
     @State private var username = ""
     @State private var mcManager: MCPlayerManager?
     @State private var isNavigating = false
+    @State private var avatar: String? = avatars.randomElement()
     var body: some View {
         NavigationStack {
             if let mcManager {
@@ -21,28 +22,29 @@ struct ContentViewiPhone: View {
                 case .scoreboard:
                     Text("Look at the scoreboard!")
                 case .preLobby:
-                    VStack {
-                        Text("Looking for lobbies...")
-                            .padding(.top, 25)
-                        List {
-                            ForEach(Array(mcManager.openLobbies)) { lobby in
-                                Section {
-                                    HStack {
-                                        Text("\(lobby.id.displayName)'s Lobby")
-                                        Button("Join") {
-                                            if let session = mcManager.session {
-                                                mcManager.browser.invitePeer(lobby.id, to: session, withContext: nil, timeout: 50)
-                                                print("Invited")
-                                            } else {
-                                                print("No session")
-                                            }
-                                        }
+                    let playerCount = (mcManager.session?.connectedPeers.count ?? 0) + 1
+                    
+                    PreLobby(
+                            openLobbies: Array(mcManager.openLobbies),
+                            playerCounter: playerCount,
+                            joinLobby: { lobby in
+                                if let session = mcManager.session {
+                                    
+                                    if let context = try? JSONEncoder().encode(avatar) {
+                                        mcManager.browser.invitePeer(lobby.id, to: session, withContext: context, timeout: 50)
+                                        print("Invited")
                                     }
+                                    else {
+                                        print("Failed to encode avatar!")
+                                    }
+                                    
+                                } else {
+                                    print("No session")
                                 }
-                            }
-                        }
-                    }
-                    .background(.white)
+                            },
+                            username: username,
+                            avatar: avatar ?? "BarrelSprite"
+                        )
                 case .inLobby:
                     Text("Welcome to the lobby")
                     
@@ -54,9 +56,9 @@ struct ContentViewiPhone: View {
                     case .DogFight:
                         DogFightiPhoneView()
                     case .Chain:
-                        Text("Insert chain view here")
+                        ChainiPhoneView()
                     case .EmojiMatch:
-                        Text("insert emoji match view here")
+                        EmojiMatchStartView()
                     case .Spectrum:
                         ZStack {
                             Image(.spectrumPhoneBackground)
@@ -93,12 +95,18 @@ struct ContentViewiPhone: View {
                 }
             }
         } else {
+            ZStack {
+                Image("iPhoneBackground")
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .ignoresSafeArea()
+                
                 VStack(spacing:20) {
-                    VStack{
-                        Text("Welcome to\n").font(.system(size: 40))+Text("iPlay").font(.system(size: 40)).fontWeight(.bold)
-                    }
-                    .multilineTextAlignment(.center)
-                    .padding(.top,-130)
+                    Image("iPhoneHeader")
+                        .resizable()
+                        .frame(width:300, height:200)
+                        .aspectRatio(contentMode: .fit)
+                        .padding(.bottom, 100)
                     
                     TextField("Enter Username", text: $username)
                         .padding()
@@ -128,28 +136,35 @@ struct ContentViewiPhone: View {
                             .frame(width: 240, height: 60) // Size of button
                             .background( // Button background color
                                     RoundedRectangle(cornerRadius: 30)
-                                        .stroke(Color.black, lineWidth: 1).fill(Color.black)
+                                        .stroke(Color("ButtonBlue"), lineWidth: 1).fill(Color.black)
                                         .opacity((username.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.2 : 1.0))
                             )
                     }
                     .disabled(username.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     
-                    Button(action: {
-                        isNavigating = true
-                    }) {
-                        Text("Customize Avatar")
-                            .font(.title2)
-                            .foregroundColor(.black) // Text color
-                            .frame(width: 240, height: 60) // Size of button
-                            .background(
-                                RoundedRectangle(cornerRadius: 30).stroke( Color.black,lineWidth:1).fill(Color.gray)
-                            ) // Button background color
-                            
-                    }
-                    .navigationDestination(isPresented:$isNavigating){
-                        AvatarView()
+                    NavigationLink( destination: AvatarView(username: $username, avatar: $avatar)
+                        .navigationBarBackButtonHidden(true),
+                        label: {
+                            Text("Customize Avatar")
+                                .font(.title2)
+                                .foregroundColor(.black)
+                                .frame(width: 240, height: 60)
+                                .background(RoundedRectangle(cornerRadius: 30).stroke( Color.black,lineWidth:3).fill())
+                        }
+                    )
+                    
                     }
                 }
+                Button {
+                    
+                } label: {
+                Image("settings")
+                    .resizable()
+                    .frame(width:45, height:45)
+                    .position( x: UIScreen.main.bounds.size.width - 50, y: UIScreen.main.bounds.size.height - 70)
+                    
+            }
+                
             }
         }
         .preferredColorScheme(.light)

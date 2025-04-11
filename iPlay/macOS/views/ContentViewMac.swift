@@ -33,18 +33,21 @@ struct ContentViewMac: View {
                             DogFight(mcManager: mcManager)
                         
                         case .EmojiMatch:
-                            Text("EmojiMatch")
+                            EmojiMatchGameView(mcManager: mcManager)
+                            
                         case .Chain:
-                            Text("Chain")
+                            Chain(mcManager: mcManager)
                         }
                         
-                    
                     default:
                         Color.blue
                     }
                 } else {
                     ZStack {
-                        Color.white.edgesIgnoringSafeArea(.all)
+                        Image("MacBackground")
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .edgesIgnoringSafeArea(.all)
                     VStack {
                         Image("MacHeader")
                             .resizable()
@@ -119,8 +122,6 @@ struct ContentViewMac: View {
                 }
             }
             .preferredColorScheme(.light)
-        
-        
     }
 }
 

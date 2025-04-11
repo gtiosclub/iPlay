@@ -54,6 +54,11 @@ struct LobbyView: View {
                     if mcManager.gameState == .Infected {
                         createInfectedPlayers()
                     }
+                    else if mcManager.gameState == .DogFight {
+                        #if os(macOS)
+                        createDogFightPlayers()
+                        #endif
+                    }
                     mcManager.viewState = .inGame
                     if mcManager.gameState == .Spectrum {
                         print("Sending out spectrum data")
@@ -76,9 +81,25 @@ struct LobbyView: View {
             let infectedState = MCInfectedState(infected: player.isInfected, playerID: player.id.displayName)
             mcManager.sendInfectedState(infectedState)
         }
-        
-        
     }
+    #if os(macOS)
+    func createDogFightPlayers() {
+        mcManager.dogFightPlayers.removeAll()
+
+        var availableSprites = Array(planeSprites.keys).shuffled()
+        
+        
+        for player in mcManager.gameParticipants {
+            let spriteName = availableSprites.popLast() ?? "PlaneBlank"
+            let sprite = SKSpriteNode(imageNamed: spriteName)
+            let color = planeSprites[spriteName] ?? NSColor.white
+            print("creating color: \(spriteName)")
+            mcManager.dogFightPlayers.append(
+                DogFightPlayer(id: player.id, name: player.id.displayName, playerObject: sprite, avatar: player.avatar, color: color)
+            )
+        }
+    }
+    #endif
 }
 
 #Preview {
