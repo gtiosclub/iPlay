@@ -8,7 +8,15 @@
 //#if os(macOS)
 import SpriteKit
 
-class DogFightGame: SKScene {
+class DogFightGame: SKScene, SKPhysicsContactDelegate {
+    
+    //Physics categories for handling collison types
+    struct PhysicsCategory {
+        static let player: UInt32 = 0x1 << 0
+        static let ball:   UInt32 = 0x1 << 1
+        static let wall:   UInt32 = 0x1 << 2
+    }
+    
     override func didMove(to: SKView) {
         //Add background
         #if os(macOS)
@@ -23,6 +31,10 @@ class DogFightGame: SKScene {
         generateDogFightPlayerNodes()
         
         physicsBody = SKPhysicsBody(edgeLoopFrom: frame)
+        physicsWorld.contactDelegate = self
+        physicsBody?.categoryBitMask = PhysicsCategory.wall
+        physicsBody?.contactTestBitMask = PhysicsCategory.ball
+        physicsBody?.collisionBitMask = PhysicsCategory.ball | PhysicsCategory.player
     }
     
     override func update(_ currentTime: TimeInterval) {
@@ -43,20 +55,94 @@ class DogFightGame: SKScene {
             player.playerObject.position.x += dx
             player.playerObject.position.y += dy
         }
-        print("Balls: \(MCHostManager.shared!.dogFightBalls)")
         for i in MCHostManager.shared!.dogFightBalls.indices {
             let ball = MCHostManager.shared!.dogFightBalls[i]
             
             if ball.sprite == nil { //new ball, need to create sprite
-//                print("BEFORE ball.sprite: \(ball.sprite ?? SKSpriteNode())")
                 MCHostManager.shared!.dogFightBalls[i].sprite = spawnBall(ball: ball)
-//                print("AFTER  ball.sprite: \(ball.sprite ?? SKSpriteNode())")
             } else {
                 MCHostManager.shared!.dogFightBalls[i].sprite!.position.x += ball.velocity.dx / 60
                 MCHostManager.shared!.dogFightBalls[i].sprite!.position.y += ball.velocity.dy / 60
             }
         }
     }
+    
+    //Handle contacts
+    func didBegin(_ contact: SKPhysicsContact) {
+        let bodyA = contact.bodyA
+        let bodyB = contact.bodyB
+
+        let first = bodyA.categoryBitMask < bodyB.categoryBitMask ? bodyA : bodyB
+        let second = bodyA === first ? bodyB : bodyA
+        
+        //If either are ball, remove them
+        if first.categoryBitMask == PhysicsCategory.ball {
+            if let ballNode = first.node {
+                ballNode.removeFromParent()
+            }
+        }
+        if second.categoryBitMask == PhysicsCategory.ball {
+            if let ballNode = second.node {
+                ballNode.removeFromParent()
+            }
+        }
+        //If either are player, lose life and send to invincibility
+        if first.categoryBitMask == PhysicsCategory.player {
+            //find dogfightplayer
+            for (index, player) in MCHostManager.shared!.dogFightPlayers.enumerated() {
+                if first.node == player.playerObject {
+                    MCHostManager.shared!.dogFightPlayers[index].lives -= 1
+                    if MCHostManager.shared!.dogFightPlayers[index].lives <= 0 {
+                        MCHostManager.shared!.dogFightPlayers[index].playerObject.removeFromParent()
+                    }
+                    else {
+                        handlePlayerHit(index)
+                    }
+                }
+            }
+        }
+        if second.categoryBitMask == PhysicsCategory.player {
+            for (index, player) in MCHostManager.shared!.dogFightPlayers.enumerated() {
+                if second.node == player.playerObject {
+                    if MCHostManager.shared!.dogFightPlayers[index].lives <= 0 {
+                        MCHostManager.shared!.dogFightPlayers[index].playerObject.removeFromParent()
+                    }
+                    else {
+                        handlePlayerHit(index)
+                    }
+                }
+            }
+        }
+        
+    }
+    
+    //Player contact manager:
+    func handlePlayerHit(_ playerIndex: Int) {
+        var player = MCHostManager.shared!.dogFightPlayers[playerIndex]
+        guard !player.isHit else { return }
+
+        player.isHit = true
+
+
+        let sprite = player.playerObject
+        let originalTexture = sprite.texture
+        sprite.texture = SKTexture(imageNamed: "PlaneDead")
+
+        let flashOut = SKAction.fadeAlpha(to: 0.2, duration: 0.1)
+        let flashIn = SKAction.fadeAlpha(to: 1.0, duration: 0.1)
+        let flashSequence = SKAction.sequence([flashOut, flashIn])
+        let repeatFlash = SKAction.repeat(flashSequence, count: 10)
+
+        let restore = SKAction.run {
+            sprite.texture = originalTexture
+            MCHostManager.shared!.dogFightPlayers[playerIndex].isHit = false
+        }
+
+        let sequence = SKAction.sequence([repeatFlash, restore])
+        sprite.run(sequence)
+        
+    }
+
     
     func interpolateAngle(from: CGFloat, to: CGFloat, factor: CGFloat) -> CGFloat {
         var delta = to - from
@@ -77,7 +163,8 @@ class DogFightGame: SKScene {
         ballSprite.physicsBody?.affectedByGravity = false
         ballSprite.physicsBody?.isDynamic = true
         ballSprite.physicsBody?.allowsRotation = false
-        ballSprite.physicsBody?.collisionBitMask = 0x2
+        ballSprite.physicsBody?.categoryBitMask = PhysicsCategory.ball
+        ballSprite.physicsBody?.contactTestBitMask = PhysicsCategory.player | PhysicsCategory.wall | PhysicsCategory.ball
         addChild(ballSprite)
         return ballSprite
     }
@@ -107,7 +194,10 @@ class DogFightGame: SKScene {
             playerObject.physicsBody?.affectedByGravity = false
             playerObject.physicsBody?.isDynamic = true
             playerObject.physicsBody?.allowsRotation = false
-            playerObject.physicsBody?.collisionBitMask = 0x1
+            //Collision masks
+            playerObject.physicsBody?.categoryBitMask = PhysicsCategory.player
+            playerObject.physicsBody?.contactTestBitMask = PhysicsCategory.ball | PhysicsCategory.player
+            playerObject.physicsBody?.collisionBitMask = PhysicsCategory.wall
             
             addChild(playerObject)
             
