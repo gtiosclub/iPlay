@@ -29,7 +29,7 @@ struct ContentViewiPhone: View {
                             playerCounter: playerCount,
                             joinLobby: { lobby in
                                 if let session = mcManager.session {
-                                    
+
                                     if let context = try? JSONEncoder().encode(avatar) {
                                         mcManager.browser.invitePeer(lobby.id, to: session, withContext: context, timeout: 50)
                                         print("Invited")
@@ -58,7 +58,7 @@ struct ContentViewiPhone: View {
                     case .Chain:
                         ChainiPhoneView()
                     case .EmojiMatch:
-                        EmojiMatchStartView()
+                        EmojiMatchStartView(mcManager: $mcManager)
                     case .Spectrum:
                         ZStack {
                             Image(.spectrumPhoneBackground)

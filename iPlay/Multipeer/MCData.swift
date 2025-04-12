@@ -83,6 +83,30 @@ struct MCData: Codable {
                 throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
             }
             self.data = encodedData
+        case "emojiMatchGameState":
+            let encodedData = try? JSONEncoder().encode(data as? EmojiMatchGameState)
+            guard let encodedData = encodedData else {
+                throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
+            }
+            self.data = encodedData
+        case "emojiMatchEmoji":
+            let encodedData = try? JSONEncoder().encode(data as? EmojiTypes)
+            guard let encodedData = encodedData else {
+                throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
+            }
+            self.data = encodedData
+        case "emojiMatchOtherPlayers":
+            let encodedData = try? JSONEncoder().encode(data as? [CodablePlayer])
+            guard let encodedData = encodedData else {
+                throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
+            }
+            self.data = encodedData
+        case "emojiMatchConfidence":
+            let encodedData = try? JSONEncoder().encode(data as? MCDataFloat)
+            guard let encodedData = encodedData else {
+                throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
+            }
+            self.data = encodedData
         default:
             throw MCDataError.invalidID(message: "\(id) is not supported for MCData")
         }
@@ -159,6 +183,35 @@ struct MCData: Codable {
                 throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
             }
             return chainLinks as! T
+        case "emojiMatchGameState":
+            let state = try JSONDecoder().decode(EmojiMatchGameState.self, from: data)
+            guard state is T else {
+                throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
+            }
+            return state as! T
+        case "emojiMatchEmoji":
+            let emoji = try JSONDecoder().decode(EmojiTypes.self, from: data)
+            guard emoji is T else {
+                throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
+            }
+            return emoji as! T
+        case "emojiMatchOtherPlayers":
+            let players = try JSONDecoder().decode([CodablePlayer].self, from: data)
+            guard players is T else {
+                throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
+            }
+            return players as! T
+        case "EmojiMatchPicture":
+            guard data is T else {
+                throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
+            }
+            return data as! T
+        case "emojiMatchConfidence":
+            let confidence = try JSONDecoder().decode(MCDataFloat.self, from: data)
+            guard confidence is T else {
+                throw MCDataError.invalidData(message: "The ID provided does not correspond to the provided data type")
+            }
+            return confidence as! T
         default:
             throw MCDataError.invalidID(message: "\(id) is not supported for MCData")
         }
@@ -169,16 +222,9 @@ struct MCData: Codable {
     }
     
 #if os(iOS)
-    mutating func convertImageToData(ciImage: CIImage) {
-        let context = CIContext()
-            
-            guard let cgImage = context.createCGImage(ciImage, from: ciImage.extent) else {
-                print("Couldn't convert image")
-                return
-            }
-            
-            let uiImage = UIImage(cgImage: cgImage)
-            data = uiImage.jpegData(compressionQuality: 0.8) // Convert to JPEG
+    mutating func convertImageToData(cgImage: CGImage) {
+        let uiImage = UIImage(cgImage: cgImage)
+        data = uiImage.jpegData(compressionQuality: 0.8) // Convert to JPEG
     }
 #endif
 }
