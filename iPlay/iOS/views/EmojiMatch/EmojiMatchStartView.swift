@@ -5,15 +5,41 @@
 //  Created by Danny Byrd on 4/10/25.
 //
 
+#if os(iOS)
+
 import SwiftUI
 import AVFoundation
 
 struct EmojiMatchStartView: View {
+    @Binding var mcManager: MCPlayerManager!
+    
     var body: some View {
-        Text("Game Start")
+        ZStack {
+            Image(.iPhonePaperBackground)
+            
+            switch mcManager.emojiMatchPhoneState {
+            case .start:
+                Text("Get Ready to Take Your Picture!")
+                    .foregroundStyle(.black)
+            case .takingPicture:
+                EmojiMatchCameraView()
+            case .pictureTaken:
+                VStack {                    
+                    Text("Picture Submitted!")
+                        .foregroundStyle(.black)
+                    
+                    Text("Waiting for others")
+                        .foregroundStyle(.black)
+                }
+            case .voting:
+                VotingView()
+            case .scoreUpdate:
+                Text("Score Update")
+            }
+            
+            
+        }
     }
 }
 
-#Preview {
-    EmojiMatchStartView()
-}
+#endif

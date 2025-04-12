@@ -6,11 +6,16 @@
 //
 import SwiftUI
 
-enum EmojiTypes: String, CaseIterable {
+enum EmojiTypes: String, CaseIterable, Codable {
     case happy = "EmojiMatch-HappyEmoji"
     case neutral = "EmojiMatch-NeutralEmoji"
     case suprised = "EmojiMatch-SuprisedEmoji"
+    case fear = "EmojiMatch-FearEmoji"
+    case angry = "EmojiMatch-AngryEmoji"
+    case sad = "EmojiMatch-SadEmoji"
 }
+
+#if os(macOS)
 
 let timer = Timer
     .publish(every: 1, on: .main, in: .common)
@@ -35,7 +40,7 @@ struct EmojiMatchGameView: View {
                 
                 if countdown > 0 {
                     Text("Get ready to match the emoji in...")
-                        .font(.custom("SFMono-Medium", size: 20))
+                        .font(.system(size: 30, weight: .medium, design: .monospaced))
                         .padding(.bottom, 10)
                     Text("\(countdown)")
                         .font(.system(size: 30, weight: .bold))
@@ -49,13 +54,16 @@ struct EmojiMatchGameView: View {
                         .onReceive(timer) { _ in
                             if gameCounter < gameCountTo {
                                 gameCounter += 1
+                                if gameCounter == gameCountTo {
+                                    mcManager.sendEmojiMatchState(state: .voting)
+                                }
                             }
                         }
                 } else {
                     Text("Time's up!")
                         .font(.system(size: 50, weight: .semibold))
                         .padding(.top, 40)
-                    Text("The winner is...")
+                    Text("Time To Vote!")
                         .font(.custom("SFMono-Medium", size: 20))
                         .foregroundColor(.black)
                 }
@@ -68,10 +76,14 @@ struct EmojiMatchGameView: View {
     }
 
     func startCountdown() {
+        mcManager.pickOutEmoji()
         Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { timer in
             if countdown > 0 {
                 countdown -= 1
             } else {
+                mcManager.sendEmojiMatchEmoji()
+                mcManager.sendEmojiMatchState(state: .takingPicture)
+                mcManager.sendOutEmojiMatchPlayers()
                 timer.invalidate()
             }
         }
@@ -147,7 +159,7 @@ struct CountdownView: View {
             ZStack {
                 ProgressTrack()
                 ProgressBar(counter: counter, countTo: countTo)
-                Image(EmojiTypes.allCases.randomElement()!.rawValue)
+                Image(MCHostManager.shared!.emojiMatchEmoji.rawValue)
                     .resizable()
                     .scaledToFit()
                     .frame(width: 130)
@@ -162,3 +174,4 @@ struct CountdownView: View {
     EmojiMatchGameView(mcManager: .init(name: "Preview"))
 }
 
+#endif

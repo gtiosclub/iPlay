@@ -27,17 +27,19 @@ class MCPlayerManager: NSObject {
     var viewState: ViewState = .preLobby
     var gameState: GameState = .Infected
     
-    
-    
     //SPECTRUM
     var spectrumPhoneState: SpectrumPhoneState = .instructions
-    
     enum SpectrumPhoneState: Codable {
         case instructions, youGivingPrompt, waitingForPrompter, waitForGuessers, youAreGuessing, revealingGuesses, pointsAwarded
     }
     var spectrumPrompt: SpectrumPrompt?
     var spectrumHint: String?
     
+    //EMOJIMATCH
+    var emojiMatchPhoneState: EmojiMatchGameState = .start
+    var emojiMatchEmoji: EmojiTypes? = nil
+    var emojiMatchOtherPlayers = [CodablePlayer]()
+    var emojiMatchPicture: CGImage?
     
     private init(name: String) {
         let peerID = MCPeerID(displayName: name)
@@ -142,7 +144,17 @@ extension MCPlayerManager: MCSessionDelegate {
                     currentInfectedStatus = infectedState.infected
                     print(currentPlayer)
                 }
-                
+            case "emojiMatchGameState":
+                let state = try mcData.decodeData(id: "emojiMatchGameState", as: EmojiMatchGameState.self)
+                emojiMatchPhoneState = state
+            case "emojiMatchOtherPlayers":
+                let otherPlayers = try mcData.decodeData(id: "emojiMatchOtherPlayers", as: [CodablePlayer].self)
+                emojiMatchOtherPlayers = otherPlayers.filter({ player in
+                    player.name != currentPlayer.username
+                })
+            case "emojiMatchEmoji":
+                let emoji = try mcData.decodeData(id: "emojiMatchEmoji", as: EmojiTypes.self)
+                emojiMatchEmoji = emoji
             default:
                 print("Unhandled ID: \(mcData.id)")
             }
@@ -321,6 +333,51 @@ extension MCPlayerManager {
             try session.send(encodedLinks, toPeers: [host], with: .reliable)
         } catch {
             print("Failed to submit chain links: \(error.localizedDescription)")
+        }
+    }
+    
+    func sendEmoijMatchPicture(cgImage: CGImage) {
+        guard let session else {
+            print("Session is nil")
+            return
+        }
+        
+        guard let host else {
+            print("No host in session")
+            return
+        }
+        
+        #if os(iOS)
+        var mcData = MCData(id: "EmojiMatchPicture")
+        mcData.convertImageToData(cgImage: cgImage)
+        do {
+            let encodedImage = try JSONEncoder().encode(mcData)
+            try session.send(encodedImage, toPeers: [host], with: .reliable)
+        } catch {
+            print("Failed to send emoij match picture: \(error.localizedDescription)")
+        }
+        #endif
+    }
+    
+    func sendEmojiMatchConfidence(confidence: Double) {
+        guard let session else {
+            print("Session is nil")
+            return
+        }
+        
+        guard let host else {
+            print("No host in session")
+            return
+        }
+        
+        var mcData = MCData(id: "emojiMatchConfidence")
+        let mcFloat = MCDataFloat(num: confidence)
+        do {
+            try mcData.encodeData(id: "emojiMatchConfidence", data: mcFloat)
+            let encoded = try JSONEncoder().encode(mcData)
+            try session.send(encoded, toPeers: [host], with: .reliable)
+        } catch {
+            print("Failed to send confidence: \(error.localizedDescription)")
         }
     }
     

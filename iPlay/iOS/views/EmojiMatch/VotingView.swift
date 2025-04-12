@@ -22,15 +22,38 @@ struct VotingView: View {
                     .overlay {
                         Text("Vote who\n matches the best!")
                             .font(.system(size: 30))
-//                            .padding()
                             .multilineTextAlignment(.center)
                             .offset(y: -20)
-
                     }
                 
                 Spacer()
                 
-                
+                ScrollView {
+                    ForEach(MCPlayerManager.shared!.emojiMatchOtherPlayers, id: \.name) { player in
+                        HStack {
+                            Spacer()
+                            Spacer()
+                            
+                            Image(player.avatar)
+                            
+                            Spacer()
+                            
+                            Button {
+                                //TODO
+                            } label: {
+                                Text("vote")
+                                    .padding()
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .fill(.orange)
+                                    )
+                            }
+                            
+                            Spacer()
+                            Spacer()
+                        }
+                    }
+                }
                 
                 Spacer()
                 Spacer()
