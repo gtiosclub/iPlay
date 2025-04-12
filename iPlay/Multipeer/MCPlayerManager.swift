@@ -223,7 +223,7 @@ extension MCPlayerManager {
         do {
             try mcData.encodeData(id: mcData.id, data: MCDataFloat(num:angle))
             let data = try JSONEncoder().encode(mcData)
-            try session.send(data, toPeers: session.connectedPeers, with: .reliable)
+            try session.send(data, toPeers: session.connectedPeers, with: .unreliable)
         } catch {
             print(error)
             return
