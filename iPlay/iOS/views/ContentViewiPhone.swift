@@ -29,7 +29,7 @@ struct ContentViewiPhone: View {
                             playerCounter: playerCount,
                             joinLobby: { lobby in
                                 if let session = mcManager.session {
-                                    
+
                                     if let context = try? JSONEncoder().encode(avatar) {
                                         mcManager.browser.invitePeer(lobby.id, to: session, withContext: context, timeout: 50)
                                         print("Invited")
@@ -41,7 +41,9 @@ struct ContentViewiPhone: View {
                                 } else {
                                     print("No session")
                                 }
-                            }
+                            },
+                            username: username,
+                            avatar: avatar ?? "BarrelSprite"
                         )
                 case .inLobby:
                     Text("Welcome to the lobby")
@@ -56,7 +58,7 @@ struct ContentViewiPhone: View {
                     case .Chain:
                         ChainiPhoneView()
                     case .EmojiMatch:
-                        Text("insert emoji match view here")
+                        EmojiMatchStartView(mcManager: $mcManager)
                     case .Spectrum:
                         ZStack {
                             Image(.spectrumPhoneBackground)
@@ -93,7 +95,6 @@ struct ContentViewiPhone: View {
                 }
             }
         } else {
-            
             ZStack {
                 Image("iPhoneBackground")
                     .resizable()
@@ -131,9 +132,9 @@ struct ContentViewiPhone: View {
                     }) {
                         Text("Join game")
                             .font(.title2)
-                            .foregroundColor(.white) // Text color
-                            .frame(width: 240, height: 60) // Size of button
-                            .background( // Button background color
+                            .foregroundColor(.white)
+                            .frame(width: 240, height: 60)
+                            .background(
                                     RoundedRectangle(cornerRadius: 30)
                                         .stroke(Color("ButtonBlue"), lineWidth: 1).fill(Color.black)
                                         .opacity((username.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.2 : 1.0))

@@ -14,3 +14,12 @@ struct ChainPlayer: Hashable, Identifiable {
     var points: Int = 0
     var chain: [String] = []
 }
+
+struct ChainCompletion: Codable, Equatable {
+    let position: Int
+    let totalPlayers: Int
+    
+    static func == (lhs: ChainCompletion, rhs: ChainCompletion) -> Bool {
+        return lhs.position == rhs.position && lhs.totalPlayers == rhs.totalPlayers
+    }
+}

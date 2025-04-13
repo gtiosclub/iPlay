@@ -46,9 +46,18 @@ class MCHostManager: NSObject, ObservableObject {
     
     var chainPlayers: [ChainPlayer] = []
     var endWord: String? = nil
+    var chainStartWord: String? = nil
+    var chainEndWord: String? = nil
+    var completedChainPlayers: [MCPeerID] = []
+    let wordBank = ["apple", "razor", "desert", "penguin", "moon", "fire", "water", "forest", "robot", "music", "shark", "keyboard", "snow", "book", "train", "dream", "camera", "storm", "clock", "planet"]
+
     
-#if os(macOS)
+    #if os(macOS)
     var emojiMatchImages: [MCPeerID : NSImage] = [:]
+    var emojiMatchScores: [MCPeerID : Double] = [:]
+    var emojiMatchVotes: [MCPeerID : Int] = [:]
+    var emojiMatchEmoji: EmojiTypes = .happy
+    var emojiMatchAIVote: MCPeerID? = nil
     #endif
 
     init(name: String) {
@@ -141,10 +150,6 @@ class MCHostManager: NSObject, ObservableObject {
         }
         return chainsByPlayer
     }
-
-    func getLatestChain() -> String {
-        return chainPlayers.flatMap { $0.chain }.joined(separator: " → ")
-    }
     
     func getChainLinksByPlayer() -> [String: [ChainLink]] {
         var result: [String: [ChainLink]] = [:]
@@ -171,16 +176,100 @@ class MCHostManager: NSObject, ObservableObject {
     func startChainTimer() {
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
             self.secondsElapsed += 1.0
-            let guessTime = MCDataFloat(num: self.secondsElapsed)
-            self.sendChainTimer(guessTime)
         }
     }
+    
+    func checkAllPlayersComplete() {
+        if gameParticipants.count > 0 && completedChainPlayers.count == gameParticipants.count {
+            allChainPlayersCompleted()
+        }
+    }
+    
+    func checkChainCompletion(word: String, fromPeer peerID: MCPeerID) -> Bool {
+        // Case-insensitive comparison
+        if word.lowercased() == chainEndWord?.lowercased() {
+            // Make sure we don't add the player twice
+            if !completedChainPlayers.contains(peerID) {
+                // Add player to completed list in order of completion
+                completedChainPlayers.append(peerID)
+                
+                // Calculate points based on finish position (1st gets most points)
+                let position = completedChainPlayers.count
+                
+                // Award completion bonus, higher for earlier finishers
+                // Example: 50 for 1st, 30 for 2nd, 20 for 3rd, 10 for completing
+                var completionPoints = 0;
+                
+                switch position {
+                case 1:
+                    completionPoints = 50
+                case 2:
+                    completionPoints = 30
+                case 3:
+                    completionPoints = 20
+                default:
+                    completionPoints = 10
+                }
+                
+                if let index = chainPlayers.firstIndex(where: { $0.id == peerID }) {
+                    chainPlayers[index].points += completionPoints
+                    print("\(peerID.displayName) completed chain in position \(position)! Awarded \(completionPoints) points")
+                }
+                
+                // Check if all players are done
+                checkAllPlayersComplete()
+                
+                return true
+            }
+        }
+        return false
+    }
+    
     
     func allChainPlayersCompleted() {
         // This function gets called when all players have completed their chains
         // You can use this to transition to the next game state, show scores, etc.
         print("All players have successfully completed their word chains!")
         // Additional game end logic here
+    }
+    
+    func generateChainWords() {
+        // Simple implementation - could be enhanced with similarity checking
+        guard wordBank.count >= 2 else { return }
+        
+        // Shuffle and pick two different words
+        let shuffled = wordBank.shuffled()
+        chainStartWord = shuffled[0].capitalized
+        chainEndWord = shuffled[1].capitalized
+        
+        // Make sure they're different
+        if chainStartWord == chainEndWord {
+            chainEndWord = wordBank.filter { $0 != chainStartWord?.lowercased() }.randomElement()?.capitalized
+        }
+        
+        // Send to all connected peers
+        sendChainWords()
+    }
+    
+    func sendChainWords() {
+        guard let session = session,
+              let start = chainStartWord,
+              let end = chainEndWord else {
+            print("Cannot send chain words - missing session or words")
+            return
+        }
+        
+        do {
+            var mcData = MCData(id: "chainWords")
+            let chainWordPair = ChainWordPair(startWord: start, endWord: end)
+            try mcData.encodeData(id: "chainWords", data: chainWordPair)
+            let data = try JSONEncoder().encode(mcData)
+            
+            try session.send(data, toPeers: session.connectedPeers, with: .reliable)
+            print("Sent chain words: \(start) → \(end)")
+        } catch {
+            print("Failed to send chain words: \(error)")
+        }
     }
     
 }
@@ -227,18 +316,6 @@ extension MCHostManager: MCSessionDelegate {
                     //Do scoring
                     sendSpectrumState(.revealingGuesses)
                 }
-            case "chainWord":
-                let word = try mcData.decodeData(id: mcData.id, as: MCDataString.self)
-                print("Received word from: \(peerID.displayName): \(word.message)")
-                
-                if let index = chainPlayers.firstIndex(where: { $0.id == peerID }) {
-                    chainPlayers[index].chain.append(word.message)
-                    chainPlayers[index].points = chainPlayers[index].chain.count
-                } else {
-                    let newPlayer = ChainPlayer(id: peerID, name: peerID.displayName, points: 1, chain: [word.message])
-                    chainPlayers.append(newPlayer)
-                }
-
             case "chainLinks":
                 let links = try mcData.decodeData(id: mcData.id, as: [ChainLink].self)
                 let words = links.map { $0.value }
@@ -246,15 +323,14 @@ extension MCHostManager: MCSessionDelegate {
                 
                 if let index = chainPlayers.firstIndex(where: { $0.id == peerID }) {
                     chainPlayers[index].chain = words
-                    chainPlayers[index].points = words.count
+                    let _ = checkChainCompletion(word: words.last!, fromPeer: peerID)
                 } else {
-                    let newPlayer = ChainPlayer(id: peerID, name: peerID.displayName, points: words.count, chain: words)
+                    let newPlayer = ChainPlayer(id: peerID, name: peerID.displayName, points: 0, chain: words)
                     chainPlayers.append(newPlayer)
                 }
-
-                
-            //Add Additional Cases Here:
-            case "emojiMatchImage":
+            
+            case "EmojiMatchPicture":
+                print("RECIEVED IMAGE FROM PLAYERRRRRR")
                 guard let data = mcData.data else {
                     print("NO Data recieved")
                     return
@@ -263,9 +339,31 @@ extension MCHostManager: MCSessionDelegate {
                 let image = NSImage(data: data)
                 emojiMatchImages[peerID] = image
 #endif
+            case "emojiMatchConfidence":
+                print("Recieved Confidence from player")
+                let confidence = try mcData.decodeData(id: "emojiMatchConfidence", as: MCDataFloat.self)
+#if os(macOS)
+                emojiMatchScores[peerID] = confidence.num
+#endif
+            case "emojiMatchOtherPlayers":
+                let players = try mcData.decodeData(id: "emojiMatchOtherPlayers", as: [CodablePlayer].self)
+#if os(macOS)
+                guard let vote = players.first else {
+                    print("Invalid vote cast")
+                    return
+                }
+                let player = gameParticipants.first { p in
+                    p.username == vote.name
+                }
+                if let id = player?.id {
+                    emojiMatchVotes[id, default: 0] += 1
+                }
+#endif
             default:
                 print("Unhandled ID: \(mcData.id)")
             }
+            
+            //Add Additional Cases Here:
             
         } catch {
             print("Error decoding: \(error)")
@@ -452,18 +550,106 @@ extension MCHostManager {
         
     }
     
-    func sendChainTimer(_ time: MCDataFloat) {
+    func sendViewStateUpdate(_ newState: ViewState) {
         guard let session else {
-            print("Could not send chain timer, no session active")
+            print("Could not send view state update, no session active")
             return
         }
+        
         do {
-            var mcData = MCData(id:"chainTimer")
-            try mcData.encodeData(id: "chainTimer", data: time)
+            var mcData = MCData(id: "viewStateUpdate")
+            try mcData.encodeData(id: "viewStateUpdate", data: newState)
             let data = try JSONEncoder().encode(mcData)
+            
+            try session.send(data, toPeers: session.connectedPeers, with: .reliable)
+            self.viewState = newState
+            print("Sent view state update: \(newState)")
         } catch {
-            print("Failed to send data: \(error.localizedDescription)")
+            print("Failed to send view state update: \(error.localizedDescription)")
         }
     }
+    
+    #if os(macOS)
+    func pickOutEmoji() {
+        emojiMatchEmoji = EmojiTypes.allCases.randomElement()!
+    }
+    
+    func sendEmojiMatchState(state: EmojiMatchGameState) {
+        guard let session else {
+            print("No session")
+            return
+        }
+        
+        do {
+            var mcData = MCData(id: "emojiMatchGameState")
+            try mcData.encodeData(id: "emojiMatchGameState", data: state)
+            let data = try JSONEncoder().encode(mcData)
+            try session.send(data, toPeers: gameParticipants.map({ player in
+                player.id
+            }), with: .reliable)
+        } catch {
+            print("Failed to send Emoji Match Game State: \(error.localizedDescription)")
+        }
+    }
+    
+    func sendEmojiMatchEmoji() {
+        guard let session else {
+            print("No session")
+            return
+        }
+        
+        do {
+            var mcData = MCData(id: "emojiMatchEmoji")
+            try mcData.encodeData(id: "emojiMatchEmoji", data: emojiMatchEmoji)
+            let data = try JSONEncoder().encode(mcData)
+            try session.send(data, toPeers: gameParticipants.map({ player in
+                player.id
+            }), with: .reliable)
+        } catch {
+            print("Failed to send Emoji: \(error.localizedDescription)")
+        }
+    }
+    
+    //for voting
+    func sendOutEmojiMatchPlayers() {
+        guard let session else {
+            print("No session")
+            return
+        }
+        
+        do {
+            var codablePlayers = gameParticipants.map { player in
+                CodablePlayer(name: player.username, avatar: player.avatar)
+            }
+            
+            var mcData = MCData(id: "emojiMatchOtherPlayers")
+            try mcData.encodeData(id: "emojiMatchOtherPlayers", data: codablePlayers)
+            let data = try JSONEncoder().encode(mcData)
+            try session.send(data, toPeers: gameParticipants.map({ player in
+                player.id
+            }), with: .reliable)
+        } catch {
+            print("Failed to send other players: \(error.localizedDescription)")
+        }
+    }
+    
+    func calculateAIVote() {
+        var player: MCPeerID? = nil
+        var max = 0.0
+        for (k,v) in emojiMatchScores {
+            if v > max {
+                player = k
+                max = v
+            }
+        }
+        
+        if let player {
+            emojiMatchVotes[player, default: 0] += 1
+            emojiMatchAIVote = player
+        }
+        
+        print(player?.displayName ?? "No ai vote")
+    }
+    #endif
     //Add other Multipeer Connectivity send functions here:
 }

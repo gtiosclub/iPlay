@@ -11,6 +11,9 @@ public struct PreLobby: View {
     let openLobbies: [Lobby]
     let playerCounter: Int
     let joinLobby: (Lobby) -> Void
+    let username: String
+    let avatar: String
+    
     
     public var body: some View {
         ZStack{
@@ -37,12 +40,12 @@ public struct PreLobby: View {
                     Text("Join a Game")
                         .font(.system(size: 32, weight: .medium))
                                         
-                    Text("player 1")
+                    Text(username)
                         .font(.system(size: 20, weight: .light))
                         .foregroundColor(.black.opacity(0.7))
                         .padding(.top, 1)
                     
-                    Image("BarrelSprite")
+                    Image(avatar)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                         .frame(width: 125, height: 125)
