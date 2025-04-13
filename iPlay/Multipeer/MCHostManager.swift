@@ -191,11 +191,21 @@ class MCHostManager: NSObject, ObservableObject {
                 
                 // Calculate points based on finish position (1st gets most points)
                 let position = completedChainPlayers.count
-                let totalPlayers = gameParticipants.count
                 
                 // Award completion bonus, higher for earlier finishers
-                // Example: 50 for 1st, 40 for 2nd, 30 for 3rd, etc.
-                let completionPoints = max(60 - (position * 10), 10)
+                // Example: 50 for 1st, 30 for 2nd, 20 for 3rd, 10 for completing
+                var completionPoints = 0;
+                
+                switch position {
+                case 1:
+                    completionPoints = 50
+                case 2:
+                    completionPoints = 30
+                case 3:
+                    completionPoints = 20
+                default:
+                    completionPoints = 10
+                }
                 
                 if let index = chainPlayers.firstIndex(where: { $0.id == peerID }) {
                     chainPlayers[index].points += completionPoints
@@ -302,18 +312,6 @@ extension MCHostManager: MCSessionDelegate {
                     //Do scoring
                     sendSpectrumState(.revealingGuesses)
                 }
-            case "chainWord":
-                let word = try mcData.decodeData(id: mcData.id, as: MCDataString.self)
-                print("Received word from: \(peerID.displayName): \(word.message)")
-                
-                if let index = chainPlayers.firstIndex(where: { $0.id == peerID }) {
-                    chainPlayers[index].chain.append(word.message)
-                    chainPlayers[index].points = chainPlayers[index].chain.count
-                } else {
-                    let newPlayer = ChainPlayer(id: peerID, name: peerID.displayName, points: 1, chain: [word.message])
-                    chainPlayers.append(newPlayer)
-                }
-
             case "chainLinks":
                 let links = try mcData.decodeData(id: mcData.id, as: [ChainLink].self)
                 let words = links.map { $0.value }
@@ -321,9 +319,9 @@ extension MCHostManager: MCSessionDelegate {
                 
                 if let index = chainPlayers.firstIndex(where: { $0.id == peerID }) {
                     chainPlayers[index].chain = words
-                    chainPlayers[index].points = words.count
+                    let _ = checkChainCompletion(word: words.last!, fromPeer: peerID)
                 } else {
-                    let newPlayer = ChainPlayer(id: peerID, name: peerID.displayName, points: words.count, chain: words)
+                    let newPlayer = ChainPlayer(id: peerID, name: peerID.displayName, points: 0, chain: words)
                     chainPlayers.append(newPlayer)
                 }
 

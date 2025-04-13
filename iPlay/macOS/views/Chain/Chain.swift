@@ -10,8 +10,7 @@ import SwiftUI
 struct Chain: View {
     @Bindable var mcManager: MCHostManager
     @State private var completedPlayers = [String]() // Preserves order
-    @State private var timeRemaining = 30
-    @State private var gameEnded = false
+    @State private var timeRemaining = 60
     @State private var timer: Timer?
 
     var body: some View {
@@ -23,17 +22,6 @@ struct Chain: View {
             Text("Time Remaining: \(timeRemaining) sec")
                 .font(.subheadline)
                 .foregroundColor(timeRemaining <= 10 ? .red : .secondary)
-
-            if gameEnded {
-                Text("⏱️ Game Over!")
-                    .font(.headline)
-                    .foregroundColor(.red)
-            } else if mcManager.gameParticipants.count > 0 &&
-                        completedPlayers.count == mcManager.gameParticipants.count {
-                Text("🎉 All players completed their chains! 🎉")
-                    .font(.headline)
-                    .foregroundColor(.green)
-            }
 
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 15) {
@@ -70,48 +58,18 @@ struct Chain: View {
             mcManager.generateChainWords()
             startTimer()
         }
-        .onChange(of: mcManager.getChainsByPlayer()) { _ in
-            checkForCompletedChains()
-        }
     }
 
     func isCompleted(_ playerName: String) -> Bool {
         completedPlayers.contains(playerName)
     }
 
-    func checkForCompletedChains() {
-        guard !gameEnded else { return }
-
-        for (playerName, chain) in mcManager.getChainsByPlayer() {
-            if !completedPlayers.contains(playerName),
-               let last = chain.last,
-               last.lowercased() == mcManager.endWord?.lowercased() {
-                completedPlayers.append(playerName)
-                awardPoints(to: playerName)
-            }
-        }
-
-        if mcManager.gameParticipants.count > 0 &&
-            completedPlayers.count == mcManager.gameParticipants.count - 1 {
-            endGame()
-        }
-    }
-
-    func awardPoints(to playerName: String) {
-        // Points: 50 for 1st, 40 for 2nd, ...
-        let index = completedPlayers.count - 1
-        let points = max(50 - index * 10, 10)
-
-        if let idx = mcManager.chainPlayers.firstIndex(where: { $0.name == playerName }) {
-            mcManager.chainPlayers[idx].points += points
-            print("\(playerName) awarded \(points) points!")
-        }
-    }
-
     func startTimer() {
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { t in
             timeRemaining -= 1
             if timeRemaining <= 0 {
+                endGame()
+            } else if mcManager.completedChainPlayers.count == mcManager.gameParticipants.count {
                 endGame()
             }
         }
@@ -120,9 +78,8 @@ struct Chain: View {
     func endGame() {
         timer?.invalidate()
         timer = nil
-        gameEnded = true
+        completedPlayers.removeAll()
         mcManager.applyChainPointsToGameParticipants()
-        mcManager.chainPlayers = []
         mcManager.viewState = .scoreboard
         print("Chain game ended.")
     }

@@ -129,7 +129,7 @@ struct ChainiPhoneView: View {
     func startTimer() {
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { t in
             timeElapsed += 1
-            if timeElapsed >= 30 {
+            if timeElapsed >= 60 {
                 gameOver = true
                 timer?.invalidate()
             }
