@@ -35,13 +35,18 @@ struct VotingView: View {
                             Spacer()
                             
                             Image(player.avatar)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 50)
                             
                             Spacer()
                             
                             Button {
-                                //TODO
+                                MCPlayerManager.shared?.sendVote(for: player)
+                                MCPlayerManager.shared?.emojiMatchPhoneState = .voteSubmitted
                             } label: {
                                 Text("vote")
+                                    .foregroundStyle(.black)
                                     .padding()
                                     .background(
                                         RoundedRectangle(cornerRadius: 10)

@@ -15,6 +15,10 @@ enum EmojiTypes: String, CaseIterable, Codable {
     case sad = "EmojiMatch-SadEmoji"
 }
 
+enum EmojiMatchMacState {
+    case inGame, leaderboard
+}
+
 #if os(macOS)
 
 let timer = Timer
@@ -27,50 +31,211 @@ struct EmojiMatchGameView: View {
     @State private var countdown = 3
     @State private var gameCounter = 0
     let gameCountTo = 30
+    
+    @State var votingTimer = 20
+    @State var gameState: EmojiMatchMacState = .inGame {
+        didSet {
+            if gameState == .inGame {
+                countdown = 3
+                gameCounter = 0
+                
+                votingTimer = 20
+            }
+        }
+    }
 
     var body: some View {
-        ZStack {
-            Image("EmojiMatchBackground")
-                .resizable()
-                .scaledToFill()
-
-            VStack {
-                Spacer()
-                Spacer()
+        if gameState == .inGame {
+            ZStack {
+                Image("EmojiMatchBackground")
+                    .resizable()
+                    .scaledToFill()
                 
-                if countdown > 0 {
-                    Text("Get ready to match the emoji in...")
-                        .font(.system(size: 30, weight: .medium, design: .monospaced))
-                        .padding(.bottom, 10)
-                    Text("\(countdown)")
-                        .font(.system(size: 30, weight: .bold))
-                        .foregroundColor(.black)
-                        .onAppear {
-                            startCountdown()
+                VStack {
+                    Spacer()
+                    Spacer()
+                    
+                    if countdown > 0 {
+                        Text("Get ready to match the emoji in...")
+                            .font(.system(size: 30, weight: .medium, design: .monospaced))
+                            .padding(.bottom, 10)
+                        Text("\(countdown)")
+                            .font(.system(size: 30, weight: .bold))
+                            .foregroundColor(.black)
+                            .onAppear {
+                                startCountdown()
+                            }
+                    } else if gameCounter < gameCountTo {
+                        CountdownView(counter: gameCounter, countTo: gameCountTo)
+                            .frame(width: 250, height: 250)
+                            .onReceive(timer) { _ in
+                                if gameCounter < gameCountTo {
+                                    gameCounter += 1
+                                    if gameCounter == gameCountTo {
+                                        mcManager.sendEmojiMatchState(state: .voting)
+                                    }
+                                }
+                            }
+                    } else {
+                        HStack {
+                            Spacer()
+                            Text("Time To Vote!")
+                                .font(.system(size: 20))
+                                .foregroundColor(.black)
+                            Spacer()
                         }
-                } else if gameCounter < gameCountTo {
-                    CountdownView(counter: gameCounter, countTo: gameCountTo)
-                        .frame(width: 250, height: 250)
-                        .onReceive(timer) { _ in
-                            if gameCounter < gameCountTo {
-                                gameCounter += 1
-                                if gameCounter == gameCountTo {
-                                    mcManager.sendEmojiMatchState(state: .voting)
+                        
+                        Text(String(votingTimer))
+                            .font(.system(size: 35))
+                            .foregroundStyle(.black)
+                            .onReceive(timer) { _ in
+                                votingTimer -= 1
+                                if votingTimer == 0 {
+                                    mcManager.calculateAIVote()
+                                    gameState = .leaderboard
+                                }
+                            }
+                        
+                        HStack {
+                            ForEach(Array(mcManager.gameParticipants), id: \.id) { player in
+                                VStack {
+                                    if let playerImage = mcManager.emojiMatchImages[player.id] {
+                                        ZStack {
+                                            Image(nsImage: playerImage)
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(width: 150)
+                                                .clipShape(Circle())
+                                            
+                                            Image("circleHolePaper")
+                                                .resizable()
+                                                .scaledToFit()
+                                                .scaleEffect(1.6)
+                                                .offset(y: 1)
+                                                .frame(width: 150, height: 150)
+                                                .clipShape(Circle())
+                                        }
+                                        .frame(width: 150, height: 150)
+                                    }
+                                    
+                                    Image(player.avatar)
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: 100, height: 100)
                                 }
                             }
                         }
-                } else {
-                    Text("Time's up!")
-                        .font(.system(size: 50, weight: .semibold))
-                        .padding(.top, 40)
-                    Text("Time To Vote!")
-                        .font(.custom("SFMono-Medium", size: 20))
-                        .foregroundColor(.black)
+                        
+
+                    }
+                    
+                    Spacer()
+                    Image(MCHostManager.shared!.emojiMatchEmoji.rawValue)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 130)
+                    Spacer()
+                    Spacer()
                 }
+            }
+            .onChange(of: gameState) { oldValue, newValue in
+                if newValue == .inGame {
+                    countdown = 3
+                    gameCounter = 0
+                    
+                    votingTimer = 20
+                }
+            }
+        } else {
+            GeometryReader { context in
+                ZStack {
+                    Image(.emojiMatchBackground)
+                        .resizable()
+                        .scaledToFill()
+                        .ignoresSafeArea()
+                    
+                    VStack {
+                        ForEach(Array(MCHostManager.shared!.gameParticipants), id: \.id) { player in
+                            HStack {
+                                Spacer()
+                                
+                                Image(player.avatar)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: 50, height: 50)
+                                
+                                ZStack {
+                                    if let image = MCHostManager.shared!.emojiMatchImages[player.id] {
+                                        ZStack {
+                                            Image(nsImage: image)
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(width: 150)
+                                                .clipShape(Circle())
+                                            
+                                            Image("circleHolePaper")
+                                                .resizable()
+                                                .scaledToFit()
+                                                .scaleEffect(1.6)
+                                                .offset(y: 1)
+                                                .frame(width: 150, height: 150)
+                                                .clipShape(Circle())
+                                        }
+                                        .frame(width: 150, height: 150)
+                                    }
+                                }
+                                
+                                Text("\(MCHostManager.shared!.emojiMatchVotes[player.id, default: 0]) votes")
+                                    .foregroundStyle(.black)
+                                
+                                if let aiGuess = MCHostManager.shared!.emojiMatchAIVote, aiGuess == player.id {
+                                    Text("EmojiAI Voted for You!")
+                                        .foregroundStyle(.black)
+                                }
+
+                                Spacer()
+                                Spacer()
+                            }
+                        }
+                    }
+                    
+                    HStack {
+                        VStack {
+                            Button {
+                                MCHostManager.shared!.viewState = .inLobby
+                                MCHostManager.shared!.emojiMatchImages = [:]
+                                MCHostManager.shared!.emojiMatchScores = [:]
+                                MCHostManager.shared!.emojiMatchScores = [:]
+                                MCHostManager.shared!.emojiMatchEmoji = .happy
+                                MCHostManager.shared!.emojiMatchAIVote = .none
+                            } label: {
+                                Image(systemName: "x.circle")
+                                    .foregroundStyle(.black)
+                                    .imageScale(.large)
+                            }
                 
-                Spacer()
-                Spacer()
-                Spacer()
+                            Spacer()
+                            
+                            Button {
+                                MCHostManager.shared!.emojiMatchImages = [:]
+                                MCHostManager.shared!.emojiMatchScores = [:]
+                                MCHostManager.shared!.emojiMatchScores = [:]
+                                MCHostManager.shared!.emojiMatchEmoji = .happy
+                                MCHostManager.shared!.emojiMatchAIVote = .none
+                                MCHostManager.shared!.sendEmojiMatchState(state: .start)
+                                countdown = 3
+                                gameCounter = 0
+                                votingTimer = 20
+                                gameState = .inGame
+                                
+                            } label: {
+                                Text("Play Again?")
+                            }
+                        }
+                        
+                        Spacer()
+                    }
+                }
             }
         }
     }

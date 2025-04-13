@@ -152,7 +152,6 @@ struct EmojiMatchLeaderboardView: View {
         .font(.system(size: 18))
     }
     
-    
     var circleFrame: some View {
         Image("circleHolePaper")
             .resizable()

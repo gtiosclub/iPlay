@@ -16,7 +16,10 @@ struct EmojiMatchStartView: View {
     var body: some View {
         ZStack {
             Image(.iPhonePaperBackground)
-            
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
+
             switch mcManager.emojiMatchPhoneState {
             case .start:
                 Text("Get Ready to Take Your Picture!")
@@ -24,7 +27,7 @@ struct EmojiMatchStartView: View {
             case .takingPicture:
                 EmojiMatchCameraView()
             case .pictureTaken:
-                VStack {                    
+                VStack {
                     Text("Picture Submitted!")
                         .foregroundStyle(.black)
                     
@@ -34,10 +37,10 @@ struct EmojiMatchStartView: View {
             case .voting:
                 VotingView()
             case .scoreUpdate:
-                Text("Score Update")
+                Text("Check the screen to see who won!")
+            case .voteSubmitted:
+                Text("Vote Submitted!")
             }
-            
-            
         }
     }
 }

@@ -52,6 +52,7 @@ class MCHostManager: NSObject, ObservableObject {
     var emojiMatchScores: [MCPeerID : Double] = [:]
     var emojiMatchVotes: [MCPeerID : Int] = [:]
     var emojiMatchEmoji: EmojiTypes = .happy
+    var emojiMatchAIVote: MCPeerID? = nil
     #endif
 
     init(name: String) {
@@ -270,6 +271,20 @@ extension MCHostManager: MCSessionDelegate {
                 let confidence = try mcData.decodeData(id: "emojiMatchConfidence", as: MCDataFloat.self)
 #if os(macOS)
                 emojiMatchScores[peerID] = confidence.num
+#endif
+            case "emojiMatchOtherPlayers":
+                let players = try mcData.decodeData(id: "emojiMatchOtherPlayers", as: [CodablePlayer].self)
+#if os(macOS)
+                guard let vote = players.first else {
+                    print("Invalid vote cast")
+                    return
+                }
+                let player = gameParticipants.first { p in
+                    p.username == vote.name
+                }
+                if let id = player?.id {
+                    emojiMatchVotes[id, default: 0] += 1
+                }
 #endif
             default:
                 print("Unhandled ID: \(mcData.id)")
@@ -538,6 +553,24 @@ extension MCHostManager {
         } catch {
             print("Failed to send other players: \(error.localizedDescription)")
         }
+    }
+    
+    func calculateAIVote() {
+        var player: MCPeerID? = nil
+        var max = 0.0
+        for (k,v) in emojiMatchScores {
+            if v > max {
+                player = k
+                max = v
+            }
+        }
+        
+        if let player {
+            emojiMatchVotes[player, default: 0] += 1
+            emojiMatchAIVote = player
+        }
+        
+        print(player?.displayName ?? "No ai vote")
     }
     #endif
     

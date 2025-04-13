@@ -6,5 +6,5 @@
 //
 
 enum EmojiMatchGameState: Codable {
-    case start, takingPicture, pictureTaken, voting, scoreUpdate
+    case start, takingPicture, pictureTaken, voting, scoreUpdate, voteSubmitted
 }

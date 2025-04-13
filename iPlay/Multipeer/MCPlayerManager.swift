@@ -381,5 +381,26 @@ extension MCPlayerManager {
         }
     }
     
+    func sendVote(for player: CodablePlayer) {
+        guard let session else {
+            print("No session")
+            return
+        }
+        
+        guard let host else {
+            print("No host")
+            return
+        }
+        
+        do {
+            var mcData = MCData(id: "emojiMatchOtherPlayers")
+            try mcData.encodeData(id: "emojiMatchOtherPlayers", data: [player])
+            let data = try JSONEncoder().encode(mcData)
+            try session.send(data, toPeers: [host], with: .reliable)
+        } catch {
+            print("Failed to send other players: \(error.localizedDescription)")
+        }
+    }
+    
     // Add other Multipeer Connectivity send functions here:
 }
