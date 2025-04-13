@@ -18,6 +18,7 @@ struct YouAreGuessingView: View {
     var hint: String
     var prompt: String
     @Binding var playerManager: MCPlayerManager!
+    @State var hasGuessed = false
     
     var body: some View {
         VStack {
@@ -51,11 +52,14 @@ struct YouAreGuessingView: View {
             
             Spacer()
             
-            Button("Guess") {
-                print("Guess: \(ArrowComponent.guess)")
-                playerManager.submitGuess(guess: ArrowComponent.guess)
+            if !hasGuessed {
+                Button("Guess") {
+                    print("Guess: \(ArrowComponent.guess)")
+                    playerManager.submitGuess(guess: ArrowComponent.guess)
+                    hasGuessed = true
+                }
+                .buttonStyle(.borderedProminent)
             }
-            .buttonStyle(.borderedProminent)
             
             
             Spacer()

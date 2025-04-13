@@ -52,8 +52,12 @@ class MCHostManager: NSObject, ObservableObject {
     let wordBank = ["apple", "razor", "desert", "penguin", "moon", "fire", "water", "forest", "robot", "music", "shark", "keyboard", "snow", "book", "train", "dream", "camera", "storm", "clock", "planet"]
 
     
-#if os(macOS)
+    #if os(macOS)
     var emojiMatchImages: [MCPeerID : NSImage] = [:]
+    var emojiMatchScores: [MCPeerID : Double] = [:]
+    var emojiMatchVotes: [MCPeerID : Int] = [:]
+    var emojiMatchEmoji: EmojiTypes = .happy
+    var emojiMatchAIVote: MCPeerID? = nil
     #endif
 
     init(name: String) {
@@ -324,10 +328,9 @@ extension MCHostManager: MCSessionDelegate {
                     let newPlayer = ChainPlayer(id: peerID, name: peerID.displayName, points: 0, chain: words)
                     chainPlayers.append(newPlayer)
                 }
-
-                
-            //Add Additional Cases Here:
-            case "emojiMatchImage":
+            
+            case "EmojiMatchPicture":
+                print("RECIEVED IMAGE FROM PLAYERRRRRR")
                 guard let data = mcData.data else {
                     print("NO Data recieved")
                     return
@@ -336,9 +339,31 @@ extension MCHostManager: MCSessionDelegate {
                 let image = NSImage(data: data)
                 emojiMatchImages[peerID] = image
 #endif
+            case "emojiMatchConfidence":
+                print("Recieved Confidence from player")
+                let confidence = try mcData.decodeData(id: "emojiMatchConfidence", as: MCDataFloat.self)
+#if os(macOS)
+                emojiMatchScores[peerID] = confidence.num
+#endif
+            case "emojiMatchOtherPlayers":
+                let players = try mcData.decodeData(id: "emojiMatchOtherPlayers", as: [CodablePlayer].self)
+#if os(macOS)
+                guard let vote = players.first else {
+                    print("Invalid vote cast")
+                    return
+                }
+                let player = gameParticipants.first { p in
+                    p.username == vote.name
+                }
+                if let id = player?.id {
+                    emojiMatchVotes[id, default: 0] += 1
+                }
+#endif
             default:
                 print("Unhandled ID: \(mcData.id)")
             }
+            
+            //Add Additional Cases Here:
             
         } catch {
             print("Error decoding: \(error)")
@@ -544,5 +569,87 @@ extension MCHostManager {
         }
     }
     
+    #if os(macOS)
+    func pickOutEmoji() {
+        emojiMatchEmoji = EmojiTypes.allCases.randomElement()!
+    }
+    
+    func sendEmojiMatchState(state: EmojiMatchGameState) {
+        guard let session else {
+            print("No session")
+            return
+        }
+        
+        do {
+            var mcData = MCData(id: "emojiMatchGameState")
+            try mcData.encodeData(id: "emojiMatchGameState", data: state)
+            let data = try JSONEncoder().encode(mcData)
+            try session.send(data, toPeers: gameParticipants.map({ player in
+                player.id
+            }), with: .reliable)
+        } catch {
+            print("Failed to send Emoji Match Game State: \(error.localizedDescription)")
+        }
+    }
+    
+    func sendEmojiMatchEmoji() {
+        guard let session else {
+            print("No session")
+            return
+        }
+        
+        do {
+            var mcData = MCData(id: "emojiMatchEmoji")
+            try mcData.encodeData(id: "emojiMatchEmoji", data: emojiMatchEmoji)
+            let data = try JSONEncoder().encode(mcData)
+            try session.send(data, toPeers: gameParticipants.map({ player in
+                player.id
+            }), with: .reliable)
+        } catch {
+            print("Failed to send Emoji: \(error.localizedDescription)")
+        }
+    }
+    
+    //for voting
+    func sendOutEmojiMatchPlayers() {
+        guard let session else {
+            print("No session")
+            return
+        }
+        
+        do {
+            var codablePlayers = gameParticipants.map { player in
+                CodablePlayer(name: player.username, avatar: player.avatar)
+            }
+            
+            var mcData = MCData(id: "emojiMatchOtherPlayers")
+            try mcData.encodeData(id: "emojiMatchOtherPlayers", data: codablePlayers)
+            let data = try JSONEncoder().encode(mcData)
+            try session.send(data, toPeers: gameParticipants.map({ player in
+                player.id
+            }), with: .reliable)
+        } catch {
+            print("Failed to send other players: \(error.localizedDescription)")
+        }
+    }
+    
+    func calculateAIVote() {
+        var player: MCPeerID? = nil
+        var max = 0.0
+        for (k,v) in emojiMatchScores {
+            if v > max {
+                player = k
+                max = v
+            }
+        }
+        
+        if let player {
+            emojiMatchVotes[player, default: 0] += 1
+            emojiMatchAIVote = player
+        }
+        
+        print(player?.displayName ?? "No ai vote")
+    }
+    #endif
     //Add other Multipeer Connectivity send functions here:
 }

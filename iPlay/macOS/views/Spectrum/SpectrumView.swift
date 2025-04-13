@@ -158,14 +158,6 @@ struct HinterHintingView: View {
             HalfCircleGradient()
                 .frame(height: 500)
 
-            
-//            DialWithSlider(value: $hostRating)
-//                .frame(height: 300)
-            
-//            Button("Continue") {
-//                onContinue()
-//            }
-//            .buttonStyle(SpectrumButtonStyle())
         }
     }
 }
@@ -299,30 +291,6 @@ struct NewHinterView: View {
     }
 }
 
-// MARK: - DialWithSlider (Host Setting a Rating)
-
-//struct DialWithSlider: View {
-//    @Binding var value: CGFloat  // 0..1
-//    
-//    var body: some View {
-//        VStack {
-//            ZStack {
-//                HalfCircleGradient()
-//                    .frame(height: 500)
-//                
-//                
-//                ArrowPointer(value: value, radius: 75)
-//            }
-//            .frame(width: 300, height: 150)
-//
-//            Slider(value: $value, in: 0...1)
-//                .padding(.horizontal, 40)
-//        }
-//    }
-//}
-
-// MARK: - SpectrumResultsDial (Arcs for guesses + host arrow)
-
 /// A dial that shows each guess as a colored arc, plus the host’s arrow.
 struct SpectrumResultsDial: View {
     let hostRating: CGFloat
@@ -338,19 +306,6 @@ struct SpectrumResultsDial: View {
                 ArrowPointer(value: guesses[i].value, radius: 180, name: guesses[i].playerName, color: .green)
                     .foregroundStyle(guessColor(i))
             }
-//            
-//            ForEach(guesses.indices, id: \.self) { i in
-//                            let guess = guesses[i]
-//                            let arcSize: CGFloat = 0.02
-//                            let start = guess.value - arcSize/2
-//                            let end   = guess.value + arcSize/2
-//                            let from = min(max(start, 0), 1)
-//                            let to   = min(max(end, 0), 1)
-//                            
-//                            HalfCircleArc(startFraction: from, endFraction: to)
-//                                .fill(guessColor(i))
-//                                .frame(width: 300, height: 150)
-//                        }
         }
         .onAppear {
             print("GUESSES: \(guesses.count)")
