@@ -589,7 +589,7 @@ extension MCHostManager {
     
     #if os(macOS)
     func pickOutEmoji() {
-        emojiMatchEmoji = EmojiTypes.allCases.randomElement()!
+        emojiMatchEmoji = EmojiTypes.happy
     }
     
     func sendEmojiMatchState(state: EmojiMatchGameState) {
