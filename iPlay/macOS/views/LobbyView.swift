@@ -15,7 +15,7 @@ struct LobbyView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Image("lobbyBackground")
+                Image("lobbyBG")
                     .resizable()
                     .scaledToFill()
                     .ignoresSafeArea()
@@ -77,9 +77,7 @@ struct LobbyView: View {
                                     .bold()
                             }
                         }
-//                        .background(.blue)
                         .buttonStyle(PlainButtonStyle())
-//                        .padding(.bottom, 40)
                         .disabled(mcManager.gameParticipants.count < 1)
                     }
                 }

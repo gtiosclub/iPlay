@@ -23,39 +23,62 @@ struct ScoreboardScreen: View {
     }
     
     var body: some View {
-            VStack(spacing: 0) {
+        ZStack {
+            Image("lobbyBG")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
+            
+            VStack{
                 Text("Leaderboard")
                     .font(.largeTitle)
                     .bold()
-                    .frame(maxWidth: .infinity)
                     .padding()
-                    .background(Color.gray.opacity(0.2))
-                List(sortedPlayers, id: \.id) { player in
+                    .padding(.top, 100)
+                
+                ForEach(sortedPlayers) {player in
                     HStack {
                         Text("#\(rank(for: player))")
-                            .font(.title2)
+                            .font(.system(size: 45))
                             .bold()
-                            .padding(.trailing, 10)
+                            .padding(.trailing, 15)
                         Image(player.avatar)
                             .resizable()
-                            .frame(width: 40, height: 40)
-                            .clipShape(Circle())
-                    
-                            Text(player.username)
-                                .font(.headline)
-
+                            .frame(width: 80, height: 80)
+                        
+                        Text(player.username)
+                            .font(.system(size:35))
+                        
                         Spacer()
                         Text("\(player.points) points")
-                            .font(.headline)
-                
+                            .font(.system(size:35))
+                        
                     }
                     .padding(.vertical, 8)
+                    .padding(.horizontal, 100)
                 }
-                .listStyle(PlainListStyle())
-                Button("Return to Lobby") {
+                
+                Spacer()
+                
+                Button{
                     MCHostManager.shared?.viewState = .inLobby
                     MCHostManager.shared?.sendViewStateUpdate(MCHostManager.shared!.viewState)
+                } label: {
+                    ZStack {
+                        Image("chooseGame")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 300)
+                            .opacity(0.6)
+                        
+                        Text("return to lobby")
+                            .font(.system(size: 35))
+                            .bold()
+                    }
                 }
+                .buttonStyle(PlainButtonStyle())
+                .padding(.bottom, 70)
+            }
             }
             .frame(maxWidth: .infinity, maxHeight:.infinity)
         }
