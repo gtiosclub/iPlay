@@ -13,62 +13,77 @@ struct LobbyView: View {
     var username: String
     
     var body: some View {
-        VStack {
-            Text("\(username)'s Lobby")
-            List {
-                ForEach(Array(mcManager.gameParticipants)) { player in
-                    Section {
-                        HStack {
-                            Text(player.id.displayName)
-                            Image(player.avatar)
-                                .resizable()
-                                .frame(width:65, height:65)
-                                .aspectRatio(contentMode: .fit)
-                                .padding(.leading, 30)
+        NavigationStack {
+            ZStack {
+                Image("lobbyBackground")
+                    .resizable()
+                    .scaledToFill()
+                    .ignoresSafeArea()
+                
+                VStack {
+                    Text("\(username)'s Lobby")
+                        .font(.system(size:25))
+                        .bold()
+                        .padding(.top, 80)
+                    
+                        ForEach(Array(mcManager.gameParticipants)) { player in
+                                HStack {
+                                    Text(player.id.displayName)
+                                        .font(.system(size:20))
+                                    Image(player.avatar)
+                                        .resizable()
+                                        .frame(width:80, height:80)
+                                        .aspectRatio(contentMode: .fit)
+                                        .padding(.leading, 25)
+                                }
                         }
+                    
+                    Spacer()
+                    
+                    NavigationLink{
+                        GameSelectView(mcManager: mcManager)
+                    } label: {
+                            Text("choose game")
+                                .font(.system(size: 30, weight: .thin))
+                    }
+                    .padding(.bottom, -25)
+                    .buttonStyle(PlainButtonStyle())
+                    
+                        Button{
+                            if mcManager.gameState == .Infected {
+                                createInfectedPlayers()
+                            }
+                            else if mcManager.gameState == .DogFight {
+#if os(macOS)
+                                createDogFightPlayers()
+#endif
+                            }
+                            mcManager.viewState = .inGame
+                            if mcManager.gameState == .Spectrum {
+                                print("Sending out spectrum data")
+                                mcManager.sendOutInitialSpectrumData()
+                            }
+                            mcManager.sendGameState()
+                        } label: {
+                            ZStack {
+                                Image("chooseGame")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 300)
+                                    .opacity(0.6)
+                                
+                                Text("start game")
+                                    .font(.system(size: 35))
+                                    .bold()
+                            }
+                        }
+//                        .background(.blue)
+                        .buttonStyle(PlainButtonStyle())
+//                        .padding(.bottom, 40)
+                        .disabled(mcManager.gameParticipants.count < 1)
                     }
                 }
             }
-
-            Text("Select Game:")
-            Button("Infected") {
-                mcManager.gameState = .Infected
-            }
-            Button("Spectrum") {
-                mcManager.gameState = .Spectrum
-            }
-            
-            Button("Dog Fight") {
-                mcManager.gameState = .DogFight
-            }
-            
-            Button("Emoji Match") {
-                mcManager.gameState = .EmojiMatch
-            }
-            
-            Button("Chain") {
-                mcManager.gameState = .Chain
-            }
-            
-            Button("Start Game: \(mcManager.gameState)") {
-                    if mcManager.gameState == .Infected {
-                        createInfectedPlayers()
-                    }
-                    else if mcManager.gameState == .DogFight {
-                        #if os(macOS)
-                        createDogFightPlayers()
-                        #endif
-                    }
-                    mcManager.viewState = .inGame
-                    if mcManager.gameState == .Spectrum {
-                        print("Sending out spectrum data")
-                        mcManager.sendOutInitialSpectrumData()
-                    }
-                    mcManager.sendGameState()
-            }
-            .padding(.vertical, 40)
-            .disabled(mcManager.gameParticipants.count < 1)
-        }
     }
     func createInfectedPlayers() {
         mcManager.infectedPlayers.removeAll()

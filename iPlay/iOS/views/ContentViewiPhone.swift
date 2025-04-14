@@ -46,7 +46,7 @@ struct ContentViewiPhone: View {
                             avatar: avatar ?? "BarrelSprite"
                         )
                 case .inLobby:
-                    Text("Welcome to the lobby")
+                    LobbyPhoneView(avatar: avatar ?? "BarrelSprite", username: username)
                     
                 case .inGame:
                     //TODO: Add views for in Game
