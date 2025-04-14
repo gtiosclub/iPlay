@@ -133,6 +133,24 @@ class MCHostManager: NSObject, ObservableObject {
         viewState = .scoreboard
     }
     
+    func endDogFightGame() {
+        var updatedPlayers = gameParticipants
+
+        for dogFightPlayer in dogFightPlayers {
+            if let player = gameParticipants.first(where: { $0.id == dogFightPlayer.id }) {
+                var updatedPlayer = player
+                updatedPlayer.points += Int(dogFightPlayer.points)
+            
+                updatedPlayers.remove(player)
+                updatedPlayers.insert(updatedPlayer)
+            }
+        }
+        gameParticipants = updatedPlayers
+        dogFightBalls = []
+        dogFightPlayers = []
+        viewState = .scoreboard
+    }
+    
     func infectScore(infectorIndex: Int, infectedIndex: Int) {
 //        let basePoints = Int(ceil(120.0 / Double(infectedPlayers.count - 1)))
         
