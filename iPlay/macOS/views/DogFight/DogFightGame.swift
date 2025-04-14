@@ -10,6 +10,8 @@ import SpriteKit
 
 class DogFightGame: SKScene, SKPhysicsContactDelegate {
     
+    var numAlivePlayers = MCHostManager.shared!.dogFightPlayers.count
+    
     //Physics categories for handling collison types
     struct PhysicsCategory {
         static let player: UInt32 = 0x1 << 0
@@ -29,7 +31,7 @@ class DogFightGame: SKScene, SKPhysicsContactDelegate {
         #endif
         
         generateDogFightPlayerNodes()
-        
+        numAlivePlayers = MCHostManager.shared!.dogFightPlayers.count
         physicsBody = SKPhysicsBody(edgeLoopFrom: frame)
         physicsWorld.contactDelegate = self
         physicsBody?.categoryBitMask = PhysicsCategory.wall
@@ -65,6 +67,17 @@ class DogFightGame: SKScene, SKPhysicsContactDelegate {
                 MCHostManager.shared!.dogFightBalls[i].sprite!.position.y += ball.velocity.dy / 60
             }
         }
+        
+        if numAlivePlayers <= 1 {
+            //Go through and call score players who are still alive
+            for ind in MCHostManager.shared!.dogFightPlayers.indices {
+                numAlivePlayers = 0
+                if MCHostManager.shared!.dogFightPlayers[ind].lives > 0 {
+                    scorePlayer(playerInd: ind)
+                }
+            }
+            MCHostManager.shared!.endDogFightGame()
+        }
     }
     
     //Handle contacts
@@ -88,57 +101,60 @@ class DogFightGame: SKScene, SKPhysicsContactDelegate {
         }
         //If either are player, lose life and send to invincibility
         if first.categoryBitMask == PhysicsCategory.player {
-            //find dogfightplayer
             for (index, player) in MCHostManager.shared!.dogFightPlayers.enumerated() {
                 if first.node == player.playerObject {
-                    MCHostManager.shared!.dogFightPlayers[index].lives -= 1
-                    if MCHostManager.shared!.dogFightPlayers[index].lives <= 0 {
-                        MCHostManager.shared!.dogFightPlayers[index].playerObject.removeFromParent()
-                    }
-                    else {
-                        handlePlayerHit(index)
-                    }
+                    print("player collision, lives before: \(MCHostManager.shared!.dogFightPlayers[index].lives)")
+                    handlePlayerHit(index)
+                    print("player collision, lives after: \(MCHostManager.shared!.dogFightPlayers[index].lives)")
                 }
             }
         }
         if second.categoryBitMask == PhysicsCategory.player {
             for (index, player) in MCHostManager.shared!.dogFightPlayers.enumerated() {
                 if second.node == player.playerObject {
-                    if MCHostManager.shared!.dogFightPlayers[index].lives <= 0 {
-                        MCHostManager.shared!.dogFightPlayers[index].playerObject.removeFromParent()
-                    }
-                    else {
-                        handlePlayerHit(index)
-                    }
+                    print("player collision, lives before: \(MCHostManager.shared!.dogFightPlayers[index].lives)")
+                    handlePlayerHit(index)
+                    print("player collision, lives after: \(MCHostManager.shared!.dogFightPlayers[index].lives)")
                 }
             }
         }
-        
+        print("num Players remaining: \(numAlivePlayers)")
     }
     
     //Player contact manager:
     func handlePlayerHit(_ playerIndex: Int) {
         var player = MCHostManager.shared!.dogFightPlayers[playerIndex]
-        guard !player.isHit else { return }
-
-        player.isHit = true
-
-
-        let sprite = player.playerObject
-        sprite.texture = SKTexture(imageNamed: "PlaneDead")
-
-        let flashOut = SKAction.fadeAlpha(to: 0.2, duration: 0.1)
-        let flashIn = SKAction.fadeAlpha(to: 1.0, duration: 0.1)
-        let flashSequence = SKAction.sequence([flashOut, flashIn])
-        let repeatFlash = SKAction.repeat(flashSequence, count: 10)
-
-        let restore = SKAction.run {
-            sprite.texture = SKTexture(imageNamed: player.planeName)
-            MCHostManager.shared!.dogFightPlayers[playerIndex].isHit = false
+        
+        if !player.isHit {
+            MCHostManager.shared!.dogFightPlayers[playerIndex].lives -= 1
+        } else {
+            print("hit avoided, player hit")
         }
-
-        let sequence = SKAction.sequence([repeatFlash, restore])
-        sprite.run(sequence)
+        if MCHostManager.shared!.dogFightPlayers[playerIndex].lives <= 0 { //Dies
+            MCHostManager.shared!.dogFightPlayers[playerIndex].playerObject.removeFromParent()
+            numAlivePlayers -= 1
+            scorePlayer(playerInd: playerIndex)
+        } else {
+            
+            player.isHit = true
+            
+            
+            let sprite = player.playerObject
+            sprite.texture = SKTexture(imageNamed: "PlaneDead")
+            
+            let flashOut = SKAction.fadeAlpha(to: 0.2, duration: 0.1)
+            let flashIn = SKAction.fadeAlpha(to: 1.0, duration: 0.1)
+            let flashSequence = SKAction.sequence([flashOut, flashIn])
+            let repeatFlash = SKAction.repeat(flashSequence, count: 10)
+            
+            let restore = SKAction.run {
+                sprite.texture = SKTexture(imageNamed: player.planeName)
+                MCHostManager.shared!.dogFightPlayers[playerIndex].isHit = false
+            }
+            
+            let sequence = SKAction.sequence([repeatFlash, restore])
+            sprite.run(sequence)
+        }
         
     }
 
@@ -230,8 +246,15 @@ class DogFightGame: SKScene, SKPhysicsContactDelegate {
         return spawnPoints
     }
     
-    func shootBall() {
-        
+    func scorePlayer(playerInd: Int) {
+        switch numAlivePlayers {
+        case 0: MCHostManager.shared!.dogFightPlayers[playerInd].points = 100 //Final player
+        case 1: MCHostManager.shared!.dogFightPlayers[playerInd].points = 75
+        case 2: MCHostManager.shared!.dogFightPlayers[playerInd].points = 50
+        case 3: MCHostManager.shared!.dogFightPlayers[playerInd].points = 25
+        default: MCHostManager.shared!.dogFightPlayers[playerInd].points = 0
+        }
     }
+    
 }
 

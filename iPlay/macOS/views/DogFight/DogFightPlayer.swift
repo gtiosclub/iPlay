@@ -34,6 +34,7 @@ struct DogFightPlayer: Hashable, Identifiable {
     #if os(macOS)
     let color: NSColor
     #endif
+    var points: Int = 0
     
     //TO-DO: create function to update heading vectors
     
