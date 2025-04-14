@@ -65,6 +65,11 @@ struct EmojiMatchGameView: View {
                             .onAppear {
                                 startCountdown()
                             }
+                        
+                        Image(MCHostManager.shared!.emojiMatchEmoji.rawValue)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 130)
                     } else if gameCounter < gameCountTo {
                         CountdownView(counter: gameCounter, countTo: gameCountTo)
                             .frame(width: 250, height: 250)
@@ -76,6 +81,9 @@ struct EmojiMatchGameView: View {
                                     }
                                 }
                             }
+                        
+                        Text("Take your Picture!")
+                            .font(.system(size: 30, weight: .bold, design: .monospaced))
                     } else {
                         HStack {
                             Spacer()
@@ -126,14 +134,14 @@ struct EmojiMatchGameView: View {
                             }
                         }
                         
+                        Image(MCHostManager.shared!.emojiMatchEmoji.rawValue)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 130)
 
                     }
                     
                     Spacer()
-                    Image(MCHostManager.shared!.emojiMatchEmoji.rawValue)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 130)
                     Spacer()
                     Spacer()
                 }
@@ -189,6 +197,10 @@ struct EmojiMatchGameView: View {
                                     .foregroundStyle(.black)
                                 
                                 if let aiGuess = MCHostManager.shared!.emojiMatchAIVote, aiGuess == player.id {
+                                    Image("Robot")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 70)
                                     Text("EmojiAI Voted for You!")
                                         .foregroundStyle(.black)
                                 }
