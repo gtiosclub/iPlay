@@ -9,7 +9,8 @@ import SpriteKit
 
 class InfectedGame: SKScene {
     override func didMove(to: SKView) {
-        self.backgroundColor = .gray
+
+        self.backgroundColor = SKColor(red:255.0/255, green:235.0/255,blue:205.0/255,alpha:1.0)
         generatePlayerNodes()
         generateObstacles()
         physicsBody = SKPhysicsBody(edgeLoopFrom: frame)
@@ -27,8 +28,8 @@ class InfectedGame: SKScene {
                 let dx = infector.playerObject.position.x - infected.playerObject.position.x
                 let dy = infector.playerObject.position.y - infected.playerObject.position.y
                 
-               if sqrt(dx * dx + dy * dy) < 50 && infector.name != infected.name {
-//                if infector.playerObject.intersects(infected.playerObject) && infector.name != infected.name {
+//               if sqrt(dx * dx + dy * dy) < 50 && infector.name != infected.name {
+                if infector.playerObject.intersects(infected.playerObject) && infector.name != infected.name {
                     print("detected collision")
                     infect(infectedIndex, infectorIndex: infectorIndex)
                 }
@@ -46,7 +47,7 @@ class InfectedGame: SKScene {
     }
     
     func generateObstacles() {
-        let numberOfObstacles = Int.random(in: 4...7)
+        let numberOfObstacles = Int.random(in: 6...8)
         
         for _ in 0..<numberOfObstacles {
             let shape = ShapeType.allCases.randomElement()! // Gets random shape from ShapeType
@@ -55,8 +56,8 @@ class InfectedGame: SKScene {
             //Random Shape Selection
             let obstacle: SKShapeNode
             switch shape {
-            case .circle: obstacle = SKShapeNode(circleOfRadius: CGFloat.random(in: 40...100))
-            case .rectangle: obstacle = SKShapeNode(rectOf: CGSize(width: CGFloat.random(in: 70...200), height: CGFloat.random(in: 70...200)))
+            case .circle: obstacle = SKShapeNode(circleOfRadius: CGFloat.random(in: 70...100))
+            case .rectangle: obstacle = SKShapeNode(rectOf: CGSize(width: CGFloat.random(in: 120...200), height: CGFloat.random(in: 140...200)))
                 //T0-DO: generate obstacles of more shapes, polygons using CGMutablePath
             case .polygon: obstacle = SKShapeNode(path: polygonPath(sides: Int.random(in: 5...8), x: CGFloat.random(in: 50...(frame.width - 50)), y: CGFloat.random(in: 50...(frame.height - 50)), offset: 0))
             }
@@ -69,7 +70,15 @@ class InfectedGame: SKScene {
             } while isTooClose(position)
             obstacle.position = position
             //Color and Outline
-            obstacle.fillColor = SKColor(red: CGFloat.random(in: 0...1), green: CGFloat.random(in: 0...1), blue: CGFloat.random(in: 0...1), alpha: 1.0)
+//            obstacle.fillColor = SKColor(red: CGFloat.random(in: 0...1), green: CGFloat.random(in: 0...1), blue: CGFloat.random(in: 0...1), alpha: 1.0)
+            let colorOptions = [
+                SKColor(red: 171.0/255, green:206.0/255, blue:149.0/255, alpha:1.0), //Green
+                SKColor(red: 175/255.0, green: 218/255.0, blue: 218/255.0, alpha:1.0), // Blue
+                SKColor(red: 248/255.0, green: 180/255.0, blue: 182/255.0, alpha:1.0), //red
+                SKColor(red: 218/255.0, green: 191/255.0, blue: 150/255.0, alpha:1.0) //brown
+            ]
+            
+            obstacle.fillColor = colorOptions.randomElement()!
             obstacle.strokeColor = .black
             obstacle.lineWidth = 5
             //Rotation
@@ -143,21 +152,18 @@ class InfectedGame: SKScene {
         for i in MCHostManager.shared!.infectedPlayers.indices {
             let player = MCHostManager.shared!.infectedPlayers[i]
             player.playerObject.position = spawnPoints[i]
-            //resize sprite to be correct, but keep
             player.playerObject.size = CGSize(width: 80, height: 80)
-            print("sprite size; \(player.playerObject.size)")
-            print("player position: \(player.playerObject.position)")
-            print("player object type: \(type(of: player.playerObject))")
-//            (player.playerObject as! SKShapeNode).fillColor = player.isInfected ? .red : .green // only if player node is shape
             let name = SKLabelNode(fontNamed: "SF Compact")
             name.text = player.name
-            name.fontSize = 12
-            name.position = CGPoint(x: 0, y: 25)
+            name.fontSize = 15
+            name.position = CGPoint(x: 0, y: 40)
             name.name = "name"
             name.fontColor = (player.isInfected ? .red : .white)
+            name.physicsBody = nil
             player.playerObject.addChild(name)
             //Physics bodies set up for collision
-            player.playerObject.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: 50, height: 50))
+//            player.playerObject.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: 50, height: 50))
+            player.playerObject.physicsBody = SKPhysicsBody(texture: player.playerObject.texture!, size: player.playerObject.size)
             player.playerObject.physicsBody?.affectedByGravity = false
             player.playerObject.physicsBody?.isDynamic = true
             player.playerObject.physicsBody?.allowsRotation = false

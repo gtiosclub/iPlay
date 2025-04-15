@@ -15,7 +15,7 @@ struct InfectedPlayer: Hashable, Identifiable {
     var isInfected: Bool = false
     var points: Int = 0
     var playerObject: SKSpriteNode
-    let MOVEMULTIPLIER: CGFloat = 20
+    let MOVEMULTIPLIER: CGFloat = 16.0
     
     func move(by vector: Vector) {
         // infected player should move faster (or he will never catch)

@@ -55,7 +55,7 @@ struct ScoreboardScreen: View {
                         
                     }
                     .padding(.vertical, 8)
-                    .padding(.horizontal, 100)
+                    .padding(.horizontal, 200)
                 }
                 
                 Spacer()
